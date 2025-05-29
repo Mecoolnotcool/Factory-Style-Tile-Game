@@ -50,12 +50,39 @@ const ShopItems = [
 
 ];
 
+const MachineInstructions = {
+    test_machine : {
+        'Name': 'test_machine',
+        'IsAMachine':true, //duh
+        'Farm': 'cash',
+        'Amount':1,
+        'When': 2, //after how many sec
+        'MaxInventory': 10
+    },
+    pump : {
+        'Name': 'test_machine',
+        'IsAMachine':true, //duh
+        'Farm': 'water',
+        'Amount':1,
+        'When': 2, //after how many sec
+        'MaxInventory': 10
+    },
+}
+
+const opposites = {
+    'right':'left',
+    'left':'right',
+    'bottom':'top',
+    'top':'bottom'
+}
+
 //functions
 function drawTile(x,y,color){
     const colors = {
         'grass' : 'green',
         'water' : 'blue',
-        'rock' : 'gray'
+        'rock' : 'gray',
+        'test_machine':'yellow'
     }
     if(typeof x !== 'number' || typeof y !== 'number' || typeof Tile_Size !== 'number') {
         console.log('failed to draw a tile, number values not provided')
@@ -70,7 +97,6 @@ function drawTile(x,y,color){
 }
 
 function shop(){
-    
     for (let i = 0; i < ShopItems.length; i++) {
         ctx.beginPath();
         ctx.fillStyle = 'black'
@@ -93,7 +119,7 @@ function Init(){
             var ty = y*Tile_Size
             
             const TileType = Math.random() < 0.80 ? 'grass' : 'water';
-            row.push({x: tx,y: ty,type: TileType});
+            row.push({x: tx,y: ty,type: TileType, inventory:null,timer:0,output:null,input:null});
             drawTile(tx,ty,TileType)
 
         }
@@ -116,18 +142,23 @@ function RedrawGrid() { //this draws the grid according to the already generated
 function AdjacentTiles(x,y) {
     let TilesNearby = [];
 
-    
-
     TilesNearby.push({
-        'left':{X:x-1,Y:y},
-        'right':{X:x+1,Y:y},
-        'bottom':{X:x,Y:y-1},
-        'top':{X:x,Y:y+1}
+        'left':{X:x-Tile_Size,Y:y},
+        'right':{X:x+Tile_Size,Y:y},
+        'bottom':{X:x,Y:y-Tile_Size},
+        'top':{X:x,Y:y+Tile_Size}
     });
 
     return TilesNearby;
 }
 
+function tileExists(x, y) {
+    if (y >= 0 && y < Tiles.length &&Tiles[y] &&x >= 0 && x < Tiles[y].length &&Tiles[y][x]) {
+        return true;
+    } else {
+        return false;
+    }
+}
 
 
 // for placement of tiles (in the future)
@@ -165,7 +196,9 @@ canvas.addEventListener('mousedown', function(event) {
     const tileY = Math.floor(mouseY /Tile_Size); 
     
     if (tileX >= 0 && tileX < TilesHorz &&tileY >= 0 && tileY < TilesVert) {
-        console.log('Clicked in the grid');
+        // console.log( Tiles[tileY][tileX])
+        Tiles[tileY][tileX].type = 'test_machine'
+        Tiles[tileY][tileX].output = 'bottom'
     } else {
         if(mouseY >= 1000 && mouseY <= 1100 && mouseX >= 6 && mouseX <= 1000){
            for (let i = 0; i < ShopItems.length; i++) {
@@ -179,18 +212,44 @@ canvas.addEventListener('mousedown', function(event) {
     }
 });
 
+let LastTime = performance.now();
+function tick(currentTime) {
+    let deltatime = (currentTime - LastTime) / 1000; //delta time meaning most accurate time
+    LastTime = currentTime;
+    
+    for (let y = 0; y < Tiles.length; y++) {
+        for (let x = 0; x < Tiles[y].length; x++) {
+            var Tile = Tiles[y][x]
+            if(MachineInstructions[Tile.type] != undefined){
+               Tile.timer = (Tile.timer || 0) + deltatime;
+               if(Tile.timer>= 1){
+                 Tile.timer = 0
+                 if(Tile.inventory == null){
+                    Tile.inventory = 1
+                 } else{
+                      Tile.inventory+=1
+                 }
+               }
+            }
+            if(Tile.output != null) {
+                var opposite = opposites[Tile.output]
+                const NearbyTiles = AdjacentTiles(Tile.x,Tile.y)
+                var dy= Math.floor(NearbyTiles[0][opposite].Y/Tile_Size) //Convert to tile coords
+                var dx = Math.floor(NearbyTiles[0][opposite].X/Tile_Size)
+                if(NearbyTiles[0][opposite] && tileExists(dx,dy)){
+                    let OutputTile = Tiles[dy][dx]  
+                } else{
+                    console.warn('i dont know what fucking error to put here but something went wrong')
+                }
 
-Init()
-
-function tileExists(x, y) {
-    if (y >= 0 && y < Tiles.length &&Tiles[y] &&x >= 0 && x < Tiles[y].length &&Tiles[y][x]) {
-        return true;
-    } else {
-        return false;
-    }
+            }
+        }
+    }  
+    requestAnimationFrame(tick)
 }
 
+Init()
+requestAnimationFrame(tick)
 
-console.log(AdjacentTiles(10,10))
 
-
+//Have output but now need where to output
