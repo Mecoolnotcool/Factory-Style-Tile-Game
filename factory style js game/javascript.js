@@ -59,14 +59,17 @@ const MachineInstructions = {
         'When': 2, //after how many sec
         'MaxInventory': 10
     },
-    pump : {
-        'Name': 'test_machine',
-        'IsAMachine':true, //duh
-        'Farm': 'water',
-        'Amount':1,
-        'When': 2, //after how many sec
-        'MaxInventory': 10
+}
+const containers = {
+    pipe :{
+        'Name':'pipe',
+        'MaxInventory':10
     },
+    fluid_tank: {
+        'Name':'pipe',
+        'MaxInventory':10,
+        'TypeInputed': 'fluid'
+    }
 }
 
 const opposites = {
@@ -76,23 +79,35 @@ const opposites = {
     'top':'bottom'
 }
 
+const Images = {
+    grass: new Image(),
+    water: new Image(),
+    test_machine: new Image(),
+    pipe: new Image(),
+};
+
+Images.grass.src = 'images/grass.png';
+Images.water.src = 'images/water.png';
+Images.test_machine.src = 'images/test_machine.png';
+Images.pipe.src = 'images/pipe.png';
+
+
 //functions
-function drawTile(x,y,color){
-    const colors = {
-        'grass' : 'green',
-        'water' : 'blue',
-        'rock' : 'gray',
-        'test_machine':'yellow'
-    }
+function drawTile(x,y,type){
     if(typeof x !== 'number' || typeof y !== 'number' || typeof Tile_Size !== 'number') {
         console.log('failed to draw a tile, number values not provided')
         return;
-    } else {
+    } 
+
+    const img = Images[type]
+    if(img && img.complete){
+        ctx.drawImage(img, x, y, Tile_Size, Tile_Size);
+    } else{
         ctx.beginPath();
-        ctx.fillStyle = colors[color]
+        ctx.fillStyle = 'white';
         ctx.rect(x, y, Tile_Size, Tile_Size);
         ctx.fill();    
-        ctx.stroke();  
+        ctx.stroke();
     }
 }
 
@@ -161,6 +176,27 @@ function tileExists(x, y) {
 }
 
 
+//this is hard coded fix later
+function transferInventorys(Ax,Ay,Bx,By, Amount){
+    if(tileExists(Ax,Ay)&& tileExists(Bx,By)){
+        let Destination = Tiles[By][Bx]
+        let Inputer = Tiles[Ay][Ax]
+       
+        if(containers[Destination.type] != undefined) {
+            if (Destination.inventory < containers[Destination.type].MaxInventory && Inputer.inventory >= Amount){
+                Destination.inventory+=Amount
+                Inputer.inventory -= Amount
+                //console.log('moved items, Destination inventory:', Destination.inventory,Destination.type,Destination.x,Destination.y) ~
+            }else{
+                //warn
+            }
+        }
+    } else{
+        //warn
+    }
+}
+
+
 // for placement of tiles (in the future)
 canvas.addEventListener('mousemove',function(event) {
     let rect = canvas.getBoundingClientRect() //This has to be done bc sometimes the canvas is in the middle other times not so we adjust it
@@ -182,6 +218,8 @@ canvas.addEventListener('mousemove',function(event) {
     } 
 })
 
+let testvar= null //delete later
+let testvar2 =0
 
 //detects clicking on tile
 canvas.addEventListener('mousedown', function(event) {
@@ -196,9 +234,21 @@ canvas.addEventListener('mousedown', function(event) {
     const tileY = Math.floor(mouseY /Tile_Size); 
     
     if (tileX >= 0 && tileX < TilesHorz &&tileY >= 0 && tileY < TilesVert) {
-        // console.log( Tiles[tileY][tileX])
-        Tiles[tileY][tileX].type = 'test_machine'
-        Tiles[tileY][tileX].output = 'bottom'
+
+        if(testvar == null) {
+            Tiles[tileY][tileX].type = 'test_machine'
+            Tiles[tileY][tileX].output = 'bottom'
+            testvar = true
+        } else if(testvar<5){
+            Tiles[tileY][tileX].type = 'pipe'
+            Tiles[tileY][tileX].output = 'bottom'
+            Tiles[tileY][tileX].input = 'top'
+            Tiles[tileY][tileX].inventory = 0
+            testvar+=1
+        } else{
+            console.log(Tiles[tileY][tileX])
+        }
+        
     } else {
         if(mouseY >= 1000 && mouseY <= 1100 && mouseX >= 6 && mouseX <= 1000){
            for (let i = 0; i < ShopItems.length; i++) {
@@ -222,12 +272,12 @@ function tick(currentTime) {
             var Tile = Tiles[y][x]
             if(MachineInstructions[Tile.type] != undefined){
                Tile.timer = (Tile.timer || 0) + deltatime;
-               if(Tile.timer>= 1){
+               if(Tile.timer>= MachineInstructions[Tile.type].When){
                  Tile.timer = 0
                  if(Tile.inventory == null){
-                    Tile.inventory = 1
-                 } else{
-                      Tile.inventory+=1
+                    Tile.inventory = MachineInstructions[Tile.type].Amount
+                 } else if(Tile.inventory < MachineInstructions[Tile.type].MaxInventory+1 ){
+                      Tile.inventory+= MachineInstructions[Tile.type].Amount
                  }
                }
             }
@@ -237,7 +287,8 @@ function tick(currentTime) {
                 var dy= Math.floor(NearbyTiles[0][opposite].Y/Tile_Size) //Convert to tile coords
                 var dx = Math.floor(NearbyTiles[0][opposite].X/Tile_Size)
                 if(NearbyTiles[0][opposite] && tileExists(dx,dy)){
-                    let OutputTile = Tiles[dy][dx]  
+                    transferInventorys(Math.floor(Tile.x/Tile_Size),Math.floor(Tile.y/Tile_Size),dx,dy,1)
+
                 } else{
                     console.warn('i dont know what fucking error to put here but something went wrong')
                 }
@@ -251,5 +302,5 @@ function tick(currentTime) {
 Init()
 requestAnimationFrame(tick)
 
-
-//Have output but now need where to output
+//made a basic pipe system. all it does it transfer items and is very hard coded
+//Need to add item types like fluids and items
