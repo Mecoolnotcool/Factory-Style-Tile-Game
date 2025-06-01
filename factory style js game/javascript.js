@@ -240,6 +240,29 @@ function drawTile(x,y,type,degrees){
     }
 }
 
+function drawMachine(x,y,machine,degrees){
+    if(typeof x !== 'number' || typeof y !== 'number' || typeof Tile_Size !== 'number') {
+        console.log('failed to draw a tile, number values not provided')
+        return;
+    } 
+   
+    const img = Images[machine]
+    if(img && img.complete){
+        ctx.save(); // save the current canvas state
+        ctx.translate(x + Tile_Size / 2, y + Tile_Size / 2); // move to the center of the image
+        ctx.rotate(degrees*(Math.PI / 180)); // rotate the canvas
+        ctx.drawImage(img, -Tile_Size / 2, -Tile_Size / 2, Tile_Size, Tile_Size); // draw the image centered
+        ctx.restore()
+        // ctx.drawImage(img, x, y, Tile_Size, Tile_Size);
+    } else{
+        ctx.beginPath();
+        ctx.fillStyle = 'grey';
+        ctx.rect(x, y, Tile_Size, Tile_Size);
+        ctx.fill();    
+        ctx.stroke();
+    }
+}
+
 function shop(){
     for (let i = 0; i < ShopItems.length; i++) {
         ctx.beginPath();
@@ -279,6 +302,9 @@ function RedrawGrid() { //this draws the grid according to the already generated
         for (let x = 0; x < Tiles[y].length; x++) {
             const tile = Tiles[y][x];
             drawTile(tile.x, tile.y, tile.type,tile.degrees);
+            if(tile.machine != null){
+                drawMachine(tile.x, tile.y,tile.machine,tile.degrees)
+            }
         }
     }  
 }
@@ -313,19 +339,19 @@ function transferInventorys(Ax,Ay,Bx,By, Amount){
             return
         }
        
-        if(containers[Destination.type] != undefined) {
-            if(containers[Destination.type].TypeInputed && containers[Destination.type].TypeInputed != null){
-               if(types[containers[Destination.type].TypeInputed]){
+        if(containers[Destination.machine] != undefined) {
+            if(containers[Destination.machine].TypeInputed && containers[Destination.machine].TypeInputed != null){
+               if(types[containers[Destination.machine].TypeInputed]){
                 var CorrectType = false
-                    for(let n = 0; n < types[containers[Destination.type].TypeInputed].length; n++) {
-                       if (types[containers[Destination.type].TypeInputed][n] == Inputer.inventory.item){
+                    for(let n = 0; n < types[containers[Destination.machine].TypeInputed].length; n++) {
+                       if (types[containers[Destination.machine].TypeInputed][n] == Inputer.inventory.item){
                         CorrectType = true
                         break
                        }
                     }
                     if(CorrectType == true){
                         if(Destination.inventory.item == null || Destination.inventory.item == Inputer.inventory.item ) {
-                         if (Destination.inventory.amount < containers[Destination.type].MaxInventory && Inputer.inventory.amount >= Amount){
+                         if (Destination.inventory.amount < containers[Destination.machine].MaxInventory && Inputer.inventory.amount >= Amount){
                             Destination.inventory.amount+=Amount
                             Inputer.inventory.amount -= Amount
                             Destination.inventory.item = Inputer.inventory.item
@@ -340,7 +366,7 @@ function transferInventorys(Ax,Ay,Bx,By, Amount){
                }
             } else{
                if(Destination.inventory.item == null || Destination.inventory.item == Inputer.inventory.item ) {
-                         if (Destination.inventory.amount < containers[Destination.type].MaxInventory && Inputer.inventory.amount >= Amount){
+                         if (Destination.inventory.amount < containers[Destination.machine].MaxInventory && Inputer.inventory.amount >= Amount){
                             Destination.inventory.amount+=Amount
                             Inputer.inventory.amount -= Amount
                             Destination.inventory.item = Inputer.inventory.item
@@ -436,7 +462,7 @@ canvas.addEventListener('mousedown', function(event) {
                     }
                     }
                 }
-                Tiles[tileY][tileX].type = ItemSelected
+                Tiles[tileY][tileX].machine = ItemSelected
                 Tiles[tileY][tileX].degrees = angle
                 ItemSelected = null
                 angle = 0
@@ -464,14 +490,14 @@ function tick(currentTime) {
     for (let y = 0; y < Tiles.length; y++) {
         for (let x = 0; x < Tiles[y].length; x++) {
             var Tile = Tiles[y][x]
-            if(MachineInstructions[Tile.type] != undefined){
+            if(MachineInstructions[Tile.machine] != undefined){
                Tile.timer = (Tile.timer || 0) + deltatime;
-               if(Tile.timer>= MachineInstructions[Tile.type].When){
+               if(Tile.timer>= MachineInstructions[Tile.machine].When){
                  Tile.timer = 0
                  if(Tile.inventory.item == null){
-                    Tile.inventory.item = MachineInstructions[Tile.type].Farm
-                 } else if(Tile.inventory.amount < MachineInstructions[Tile.type].MaxInventory ){
-                      Tile.inventory.amount+= MachineInstructions[Tile.type].Amount
+                    Tile.inventory.item = MachineInstructions[Tile.machine].Farm
+                 } else if(Tile.inventory.amount < MachineInstructions[Tile.machine].MaxInventory ){
+                      Tile.inventory.amount+= MachineInstructions[Tile.machine].Amount
                  }
                }
             }
