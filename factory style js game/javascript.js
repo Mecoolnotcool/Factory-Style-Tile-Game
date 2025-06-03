@@ -141,6 +141,7 @@ const Images = {
     shovel: new Image(),
     dirt: new Image(),
     digger: new Image(),
+    test: new Image(),
 }
 
 const Straightdirections = {
@@ -168,7 +169,7 @@ const Straightdirections = {
 
 const Turndirections = {
   0:   { input: 'top',    output: 'left' },
-  90:  { input: 'left',   output: 'top' },
+  90:  { input: 'left',   output: 'bottom' },
   180: { input: 'bottom', output: 'right' },
   270: { input: 'right',  output: 'top' },
   360:   { input: 'top',    output: 'left' },
@@ -215,6 +216,7 @@ Images.shovel.src = 'images/shovel.png';
 Images.sand.src = 'images/sand.png';
 Images.dirt.src = 'images/dirt.png';
 Images.digger.src = 'images/digger.png';
+Images.test.src = 'images/test.png';
 
 //functions
 function drawTile(x,y,type,degrees){
@@ -264,15 +266,23 @@ function drawMachine(x,y,machine,degrees){
 }
 
 function shop(){
-    for (let i = 0; i < ShopItems.length; i++) {
-        ctx.beginPath();
-        ctx.fillStyle = 'black'
-        ctx.rect(ShopItems[i].X+i*100,ShopItems[i].Y , Tile_Size, Tile_Size);
-        ctx.fill();    
-        ctx.stroke();
-        ShopItems[i].X = ShopItems[i].X+i*100;
+     for (let i = 0; i < ShopItems.length; i++) {
+        const img = Images[ShopItems[i].Name]
+        console.log(img)
+        if(img && img.complete){
+            ctx.drawImage(img, ShopItems[i].X+i*100, ShopItems[i].Y, Tile_Size, Tile_Size);
+            ShopItems[i].X = ShopItems[i].X+i*100;
+        } else{
+            ctx.beginPath();
+            ctx.fillStyle = 'grey';
+            ctx.rect(ShopItems[i].X+i*100, ShopItems[i].Y, Tile_Size, Tile_Size);
+            ctx.fill();    
+            ctx.stroke();
+            ShopItems[i].X = ShopItems[i].X+i*100;
+        }
     }
 }
+
 
 function Init(){
     console.log('game is starting')
