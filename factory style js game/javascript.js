@@ -46,6 +46,13 @@ const ShopItems = [
         X: 10,
         Y: CanvasHeight + 25 
     },
+     {
+        Name: "smelter",
+        Width: Tile_Size,
+        Height: Tile_Size,
+        X: 10,
+        Y: CanvasHeight + 25 
+    },
     {
         Name: "digger",
         Width: Tile_Size,
@@ -74,6 +81,7 @@ const ShopItems = [
         X: 10,
         Y: CanvasHeight + 25 
     },
+   
 
 
 ];
@@ -81,21 +89,31 @@ const ShopItems = [
 const MachineInstructions = {
     test_machine : {
         'Name': 'test_machine',
-        'IsAMachine':true, //duh
+        'RecipeMachine':false, 
         'Farm': 'water',
         'Amount':5,
         'When': 2, //after how many sec
-        'HasOutput':false,
+        'HasInput':false,
         'MaxInventory': 10
 
     },
     digger : {
         'Name': 'digger',
-        'IsAMachine':true, //duh
+        'RecipeMachine':false, 
         'Farm': 'sand',
         'Amount':5,
         'When': 2, //after how many sec
-        'HasOutput':false,
+        'HasInput':false,
+        'MaxInventory': 10
+
+    },  
+    smelter : {
+        'Name': 'smelter',
+        'RecipeMachine':true, 
+        'Farm': 'AIR',
+        'Amount': 1,
+        'When': 2, //after how many sec
+        'HasInput':true,
         'MaxInventory': 10
 
     },
@@ -118,6 +136,12 @@ const containers = {
         'Name':'pipe',
         'MaxInventory':100,
         'TypeInputed': 'fluid',
+        'Turn':false
+    },
+    smelter :{
+        'Name':'smelter',
+        'MaxInventory':10,
+        'TypeInputed': 'item',
         'Turn':false
     }
 }
@@ -178,10 +202,13 @@ const Turndirections = {
 
 const types = {
     fluid:[
-        'oil',
-        'water'
-    ]
-
+        'molten_glass',
+        'water',
+    ],
+    item:[
+        'sand'
+    ],
+    gas:[]
 }
 
 const placementConditions  = {
@@ -268,7 +295,6 @@ function drawMachine(x,y,machine,degrees){
 function shop(){
      for (let i = 0; i < ShopItems.length; i++) {
         const img = Images[ShopItems[i].Name]
-        console.log(img)
         if(img && img.complete){
             ctx.drawImage(img, ShopItems[i].X+i*100, ShopItems[i].Y, Tile_Size, Tile_Size);
             ShopItems[i].X = ShopItems[i].X+i*100;
@@ -296,7 +322,7 @@ function Init(){
             var ty = y*Tile_Size
             
             const TileType = Math.random() < 0.80 ? 'grass' : 'water';
-            row.push({x: tx,y: ty,type: TileType, inventory:{amount:0,item:null},timer:0,output:null,input:null,degrees:0,machine:null});
+            row.push({x: tx,y: ty,type: TileType, inventory:{amount:0,item:null},timer:0,output:null,input:null,degrees:0,machine:null, inventory2 :{active:false,item:null,amount:null}});
             drawTile(tx,ty,TileType)
 
         }
@@ -348,7 +374,7 @@ function transferInventorys(Ax,Ay,Bx,By, Amount){
         if(Destination.input == null){
             return
         }
-       
+
         if(containers[Destination.machine] != undefined) {
             if(containers[Destination.machine].TypeInputed && containers[Destination.machine].TypeInputed != null){
                if(types[containers[Destination.machine].TypeInputed]){
@@ -357,9 +383,18 @@ function transferInventorys(Ax,Ay,Bx,By, Amount){
                        if (types[containers[Destination.machine].TypeInputed][n] == Inputer.inventory.item){
                         CorrectType = true
                         break
-                       }
+                       }  
                     }
+                   
+                    //code to be edited
                     if(CorrectType == true){
+                       
+                       
+                        if(MachineInstructions[Destination.machine] && Destination.inventory2.active){
+                            console.log('dual machine, containter and machine')
+                          return
+                        }
+                    
                         if(Destination.inventory.item == null || Destination.inventory.item == Inputer.inventory.item ) {
                          if (Destination.inventory.amount < containers[Destination.machine].MaxInventory && Inputer.inventory.amount >= Amount){
                             Destination.inventory.amount+=Amount
@@ -369,12 +404,12 @@ function transferInventorys(Ax,Ay,Bx,By, Amount){
                                     Inputer.inventory.item = null;
                                 }
                           }else{
-                            //  warn
                      }
                 }
                     }
                }
             } else{
+                //this is if its not picky about whats being inputed
                if(Destination.inventory.item == null || Destination.inventory.item == Inputer.inventory.item ) {
                          if (Destination.inventory.amount < containers[Destination.machine].MaxInventory && Inputer.inventory.amount >= Amount){
                             Destination.inventory.amount+=Amount
@@ -463,7 +498,7 @@ canvas.addEventListener('mousedown', function(event) {
                         Tiles[tileY][tileX].input = Turndirections[angle].input
                     } else {
                         if(MachineInstructions[ItemSelected]) {
-                        if(MachineInstructions[ItemSelected].HasOutput == false){
+                        if(MachineInstructions[ItemSelected].HasInput == false){
                             Tiles[tileY][tileX].output = Straightdirections[angle].output
                         } else{
                              Tiles[tileY][tileX].output = Straightdirections[angle].output
@@ -501,16 +536,22 @@ function tick(currentTime) {
         for (let x = 0; x < Tiles[y].length; x++) {
             var Tile = Tiles[y][x]
             if(MachineInstructions[Tile.machine] != undefined){
-               Tile.timer = (Tile.timer || 0) + deltatime;
-               if(Tile.timer>= MachineInstructions[Tile.machine].When){
-                 Tile.timer = 0
-                 if(Tile.inventory.item == null){
+                if(MachineInstructions[Tile.machine].RecipeMachine == false){
+                    Tile.timer = (Tile.timer || 0) + deltatime;
+                    if(Tile.timer>= MachineInstructions[Tile.machine].When){
+                    Tile.timer = 0
+                     if(Tile.inventory.item == null){
                     Tile.inventory.item = MachineInstructions[Tile.machine].Farm
                  } else if(Tile.inventory.amount < MachineInstructions[Tile.machine].MaxInventory ){
                       Tile.inventory.amount+= MachineInstructions[Tile.machine].Amount
                  }
                }
+                } else{
+                     Tile.inventory2.active = true
+                }
             }
+
+            //transfer stuff
             if(Tile.output != null) {
                 var opposite = opposites[Tile.output]
                 const NearbyTiles = AdjacentTiles(Tile.x,Tile.y)
@@ -519,12 +560,15 @@ function tick(currentTime) {
                 if(NearbyTiles[0][opposite] && tileExists(dx,dy)){
                     transferInventorys(Math.floor(Tile.x/Tile_Size),Math.floor(Tile.y/Tile_Size),dx,dy,1)
                 } else{
+                    // forbidden error i accutalty do know what can cause it and its if its looking for a pixel out of range meaning not on the screen
                     console.warn('i dont know what fucking error to put here but something went wrong')
                 }
 
             }
         }
     }  
+
+
     RedrawGrid()
      if (HoveredTileX !== null && HoveredTileY !== null ) {
         if(ItemSelected == 'bucket'){
