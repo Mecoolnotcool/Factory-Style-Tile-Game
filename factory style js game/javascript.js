@@ -1,3 +1,4 @@
+
 //canvas stuff
 let canvas = document.getElementById("Canvas");
 let ctx = canvas.getContext('2d');
@@ -53,6 +54,13 @@ const ShopItems = [
         X: 10,
         Y: CanvasHeight + 25 
     },
+     {
+        Name: "glass_molder",
+        Width: Tile_Size,
+        Height: Tile_Size,
+        X: 10,
+        Y: CanvasHeight + 25 
+    },
     {
         Name: "digger",
         Width: Tile_Size,
@@ -60,20 +68,20 @@ const ShopItems = [
         X: 10,
         Y: CanvasHeight + 25 
     },
-    {
-        Name: "bucket",
-        Width: Tile_Size,
-        Height: Tile_Size,
-        X: 10,
-        Y: CanvasHeight + 25 
-    },
-     {
-        Name: "shovel",
-        Width: Tile_Size,
-        Height: Tile_Size,
-        X: 10,
-        Y: CanvasHeight + 25 
-    },
+    // {
+    //     Name: "bucket",
+    //     Width: Tile_Size,
+    //     Height: Tile_Size,
+    //     X: 10,
+    //     Y: CanvasHeight + 25 
+    // },
+    //  {
+    //     Name: "shovel",
+    //     Width: Tile_Size,
+    //     Height: Tile_Size,
+    //     X: 10,
+    //     Y: CanvasHeight + 25 
+    // },
     {
         Name: "test",
         Width: Tile_Size,
@@ -81,9 +89,14 @@ const ShopItems = [
         X: 10,
         Y: CanvasHeight + 25 
     },
-   
-
-
+    {
+        Name: "sell_machine",
+        Width: Tile_Size,
+        Height: Tile_Size,
+        X: 10,
+        Y: CanvasHeight + 25 
+    },
+ 
 ];
 
 const MachineInstructions = {
@@ -115,7 +128,15 @@ const MachineInstructions = {
         'When': 0, //after how many sec
         'HasInput':true,
         'MaxInventory': 10
-
+    },
+     glass_molder : {
+        'Name': 'glass_molder',
+        'RecipeMachine':true, 
+        'Farm': null,
+        'Amount': 0,
+        'When': 0, //after how many sec
+        'HasInput':true,
+        'MaxInventory': 10
     },
 }
 
@@ -141,8 +162,20 @@ const containers = {
     smelter :{
         'Name':'smelter',
         'MaxInventory':10,
-        'TypeInputed': 'item',
+        'TypeInputed': 'smelter',
         'Turn':false
+    },
+    glass_molder :{
+        'Name':'smelter',
+        'MaxInventory':10,
+        'TypeInputed': 'glass_molder',
+        'Turn':false
+    },
+    sell_machine : {
+       'Name':'sell_machine',
+        'MaxInventory':5,
+        'TypeInputed': null,
+        'Turn':false 
     }
 }
 
@@ -166,6 +199,8 @@ const Images = {
     dirt: new Image(),
     digger: new Image(),
     test: new Image(),
+    smelter: new Image(),
+    sell_machine: new Image(),
 }
 
 const Straightdirections = {
@@ -206,9 +241,17 @@ const types = {
         'water',
     ],
     item:[
+        'sand',
+        'glass',
+    ],
+    gas:[],
+
+    smelter: [
         'sand'
     ],
-    gas:[]
+    glass_molder: [
+        'molten_glass'
+    ]
 }
 
 const recipes = {
@@ -220,6 +263,17 @@ const recipes = {
         },
         outputRecipe: {
            item: 'molten_glass',
+           amount: 1
+        }
+    },
+    molten_glass :{
+        machineFor: 'glass_molder',
+        inputRecipe: {
+           item: 'molten_glass',
+           amount: 1
+        },
+        outputRecipe: {
+           item: 'glass',
            amount: 1
         }
     }
@@ -242,6 +296,15 @@ const placementConditions  = {
      digger:{
         'blacklist': ['water','grass','dirt','pipe','fluid_tank','pipe_turn']
     },
+    smelter:{
+        'blacklist': ['water']
+    },
+    glass_molder:{
+        'blacklist': ['water']
+    },
+    sell_machine:{
+        'blacklist': ['water']
+    },
 }
 
 const tools = ['shovel', 'test', 'bucket'];
@@ -259,6 +322,8 @@ Images.sand.src = 'images/sand.png';
 Images.dirt.src = 'images/dirt.png';
 Images.digger.src = 'images/digger.png';
 Images.test.src = 'images/test.png';
+Images.smelter.src = 'images/smelter.png';
+Images.sell_machine.src = 'images/sell_machine.png';
 
 //functions
 function drawTile(x,y,type,degrees){
@@ -380,6 +445,18 @@ function tileExists(x, y) {
         return false;
     }
 }
+
+
+function sellMachine(Tile) {
+    if ( Tile.inventory.item && Tile.inventory.amount > 0) {
+        Tile.inventory.amount -= 1
+        cash += 10
+        console.log('Just sold:',Tile.inventory.item, 'For 10 dollars')
+        if (Tile.inventory.amount == 0) Tile.inventory.item = null;
+    }
+}
+
+function craft() {}
 
 //turns one item into another
 function process(Currentmachine,inv) {
@@ -591,6 +668,10 @@ function tick(currentTime) {
                 }
             }
 
+            if(Tile.machine == containers.sell_machine.Name) {
+                sellMachine(Tile)
+            }
+
             //transfer stuff
             if(Tile.output != null) {
                 var opposite = opposites[Tile.output]
@@ -631,4 +712,3 @@ process(testTable)
 
 Init()
 requestAnimationFrame(tick)
-//634 beautiful lines of code
