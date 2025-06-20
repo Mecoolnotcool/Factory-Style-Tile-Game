@@ -1,0 +1,77 @@
+function transferInventorys(Ax,Ay,Bx,By, Amount){
+    if(tileExists(Ax,Ay)&& tileExists(Bx,By)){
+        let Destination = Tiles[By][Bx]
+        let Inputer = Tiles[Ay][Ax]
+        if(Destination.input == null){
+            return
+        }
+         
+       
+
+        if(containers[Destination.machine] != undefined) {
+            if(containers[Destination.machine].TypeInputed && containers[Destination.machine].TypeInputed != null){
+               if(types[containers[Destination.machine].TypeInputed]){
+                var CorrectType = false
+                    for(let n = 0; n < types[containers[Destination.machine].TypeInputed].length; n++) {
+                       if (types[containers[Destination.machine].TypeInputed][n] == Inputer.inventory.item){
+                        CorrectType = true
+                        break
+                       }  
+                    }
+                   
+                    //code to be edited
+                    if(CorrectType == true){
+                      
+                       //inventory 2 shit
+                        if(MachineInstructions[Destination.machine] && Destination.inventory2.active){
+                          if (Destination.inventory.item == null || Destination.inventory.item == Inputer.inventory.item) {
+                            if (Destination.inventory.amount < containers[Destination.machine].MaxInventory && Inputer.inventory.amount >= Amount){
+                                    Destination.inventory.amount+=Amount
+                                    Inputer.inventory.amount -= Amount
+                                    Destination.inventory.item = Inputer.inventory.item
+                                if(Inputer.inventory.amount == 0){
+                                    Inputer.inventory.item = null;
+                                }
+                            }
+                          }
+                          
+                        }
+                       
+                        //regular shit
+                        if(Destination.inventory.item == null || Destination.inventory.item == Inputer.inventory.item && Destination.inventory2.active == false && Inputer.inventory2.active == false) {
+                         if (Destination.inventory.amount < containers[Destination.machine].MaxInventory && Inputer.inventory.amount >= Amount){
+                                 Destination.inventory.amount+=Amount
+                                 Inputer.inventory.amount -= Amount
+                                 Destination.inventory.item = Inputer.inventory.item
+                            if(Inputer.inventory.amount == 0){
+                                Inputer.inventory.item = null;
+                            }
+                          }else{
+                     }
+                }
+                    }
+               }
+            } else{
+                //this is if its not picky about whats being inputed
+
+
+               if ((Destination.inventory.item == null || Destination.inventory.item == Inputer.inventory.item) &&Inputer.inventory2.active == false)  {
+                         if (Destination.inventory.amount < containers[Destination.machine].MaxInventory && Inputer.inventory.amount >= Amount){
+                            Destination.inventory.amount+=Amount
+                            Inputer.inventory.amount -= Amount
+                            Destination.inventory.item = Inputer.inventory.item
+                                if(Inputer.inventory.amount == 0){
+                                    Inputer.inventory.item = null;
+                                }
+                          }else{
+                            //  warn
+                     }
+                } 
+            }
+        }
+
+        
+    } else{
+        //warn
+    }
+}
