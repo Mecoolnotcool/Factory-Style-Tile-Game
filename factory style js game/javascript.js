@@ -381,68 +381,34 @@ function tileExists(x, y) {
     }
 }
 
-//doesnt require 2 or 3 items
-function process(Currentmachine) {
+//turns one item into another
+function process(Currentmachine,inv) {
+    if (Currentmachine.inventory2.active == false) return;
     for (let key in recipes) {
         const recipe = recipes[key];
         if (recipe.machineFor == Currentmachine.machine) {
             if(Currentmachine.inventory.item == recipe.inputRecipe.item){
-                
-            }
+                if(Currentmachine.inventory.amount >= 1 && Currentmachine.inventory2.amount < containers[Currentmachine.machine].MaxInventory) {
+                  Currentmachine.inventory.amount -= 1
+                  Currentmachine.inventory2.item =  recipe.outputRecipe.item
+                  Currentmachine.inventory2.amount +=1
+                  if (Currentmachine.inventory.amount <= 1) Currentmachine.inventory.item = null;
+                }
+            } 
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 //pain
 
 //these are inventories
 function doTransfer(dest,source,Amount) {
-    console.warn('final step you did it')
-
-      dest.amount+=Amount
+    if (source.amount >= Amount  && dest.inventory.amount < containers[dest.machine].MaxInventory ) { 
+      dest.inventory.amount+=Amount
       source.amount -= Amount
-      dest.item = source.item
+      dest.inventory.item = source.item
     if(source.amount == 0) source.item = null;
+    }
 }
 
 function transferInventorys(Ax,Ay,Bx,By, Amount){
@@ -453,117 +419,55 @@ function transferInventorys(Ax,Ay,Bx,By, Amount){
 
         let inventory2State = Inputer.inventory2.active
 
-        //If there is a machine
-        let aMachine = containers[Destination.machine]
-        let TrueMachineInstructions = MachineInstructions[Destination.machine] ?? false;
-        let CorrectType = false
+        let SpecificType = false
+
+        if(containers[Destination.machine]) {
+            SpecificType = containers[Destination.machine].TypeInputed ?? false;
+        }
 
         //if there is no input then cancel the function
         if(Destination.input == null) return;
+        if(Inputer.output == null) return;
       
-        if (aMachine) {
-            if(containers[Destination.machine].TypeInputed != null || containers[Destination.machine].TypeInputed != undefined){
-                //check if correct type
-               CorrectType = types[containers[Destination.machine].TypeInputed]?.includes(Inputer.inventory.item) ?? false;
-
-                if(CorrectType) {
-                    if(TrueMachineInstructions) {
-
-                        if(inventory2State) {
-                             console.log(1)
-                            changeAmounts(Amount,Destination,Inputer,inventory2State)
-                        } else if(inventory2State == false) {
-                            //need to debug
-                            changeAmounts(Amount,Destination,Inputer,inventory2State)
-                        }
-
-                    }
-                } 
-            
-                //2nd part will be worked on later
-                //
-            } else if(containers[Destination.machine].TypeInputed == null) {
-                 changeAmounts(Amount,Destination,Inputer,inventory2State)
-            }
-        }
+        checkIfTransfer(Amount,Destination,Inputer,inventory2State, SpecificType)
 
     } 
 }
 
-function changeAmounts(Amount, Destination, Inputer, AltInventory, ){
-    let typeUsed = containers[Destination.machine].TypeInputed
-    let Specific = false
-    if (typeUsed) Specific = true;
+function checkIfTransfer(Amount, Destination, Inputer, AltInventory, specific){
+    var DestinationHasAItem = Destination.inventory.item ?? false;
+    //not a container
+    var IsAMachine = MachineInstructions[Destination.machine] ?? false;
+    var MachineWithOutput = false
+    if (IsAMachine) {if(MachineInstructions[Destination.machine].HasInput == true) {MachineWithOutput = true;} }
 
-    if(AltInventory) {
-        if (Specific) {
-            //check if the item the Destination has is the same as the input or if the Destination has no item but the item being inputed is ok
-             if ((Destination.inventory.item == null && typeUsed.includes(Inputer.inventory2.item)) || Destination.inventory.item == Inputer.inventory2.item) {
-                  if (Destination.inventory.amount < containers[Destination.machine].MaxInventory && Inputer.inventory2.amount >= Amount){
-                        doTransfer(Destination.inventory, Inputer.inventory2,Amount)
-                 } 
-             } 
 
-        } else if(Specific == false) { // Isnt specific
-            if (Destination.inventory.item == null || Inputer.inventory.item == Destination.inventory2.item) {
-            if (Destination.inventory.amount < containers[Destination.machine].MaxInventory && Inputer.inventory2.amount >= Amount){
-                        doTransfer(Destination.inventory, Inputer.inventory2,Amount)
-                } 
-       } 
+    //set the inv being used
+    var inv = null;
+    if(AltInventory) inv = Inputer.inventory2; else if (AltInventory == false)  inv = Inputer.inventory;
+    if (inv == null) return;
+   
+    if (specific) {
+        if (DestinationHasAItem) {
+            if (DestinationHasAItem == inv.item) {
+                 doTransfer(Destination,inv,Amount)
+            }
+        } else if (DestinationHasAItem == false) {
+            if (types[containers[Destination.machine].TypeInputed].includes(inv.item)) {
+                 doTransfer(Destination,inv,Amount)
+            }
         }
-    } else { //Doesnt Use Inventory2 aka AltInventory
-         if (Specific) {
-            //check if the item the Destination has is the same as the input or if the Destination has no item but the item being inputed is ok
-             if ((Destination.inventory.item == null && typeUsed.includes(Inputer.inventory.item)) || Destination.inventory.item == Inputer.inventory.item) {
-                  if (Destination.inventory.amount < containers[Destination.machine].MaxInventory && Inputer.inventory.amount >= Amount){
-                     doTransfer(Destination.inventory, Inputer.inventory,Amount)          
-                 } 
-             }
     } else {
-       if (Destination.inventory == null || Inputer.inventory.item == Destination.inventory.item) {
-            if (Destination.inventory.amount < containers[Destination.machine].MaxInventory && Inputer.inventory.amount >= Amount){
-                             doTransfer(Destination.inventory, Inputer.inventory,Amount)
-                }
-       }
+        if (DestinationHasAItem) {
+            if (DestinationHasAItem == inv.item) {
+                 doTransfer(Destination,inv,Amount)
+            }
+        } else if (DestinationHasAItem == false) {
+            doTransfer(Destination,inv,Amount)
+        }
     }
+   
 }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 //rotation
 document.addEventListener("keydown", (r) => {
@@ -682,6 +586,7 @@ function tick(currentTime) {
                  }
                }
                 } else{
+                    process(Tile)
                      Tile.inventory2.active = true
                 }
             }
@@ -719,7 +624,11 @@ function tick(currentTime) {
 }
 
 
-let testTable = {x: 0,y: 0,type: 'grass', inventory:{amount:10,item:'sand'},timer:0,output:null,input:null,degrees:0,machine:'smelter', inventory2 :{active:false,item:null,amount:null}}
+
+let testTable = {x: 0,y: 0,type: 'grass', inventory:{amount:10,item:'sand'},timer:0,output:null,input:null,degrees:0,machine:'smelter', inventory2 :{active:true,item:null,amount:null}}
 process(testTable)
+
+
 Init()
 requestAnimationFrame(tick)
+//634 beautiful lines of code
