@@ -91,8 +91,8 @@ const MachineInstructions = {
         'Name': 'test_machine',
         'RecipeMachine':false, 
         'Farm': 'water',
-        'Amount':5,
-        'When': 2, //after how many sec
+        'Amount':1,
+        'When': 1, //after how many sec
         'HasInput':false,
         'MaxInventory': 10
 
@@ -101,8 +101,8 @@ const MachineInstructions = {
         'Name': 'digger',
         'RecipeMachine':false, 
         'Farm': 'sand',
-        'Amount':5,
-        'When': 2, //after how many sec
+        'Amount':1,
+        'When': 1, //after how many sec
         'HasInput':false,
         'MaxInventory': 10
 
@@ -110,9 +110,9 @@ const MachineInstructions = {
     smelter : {
         'Name': 'smelter',
         'RecipeMachine':true, 
-        'Farm': 'AIR',
-        'Amount': 1,
-        'When': 2, //after how many sec
+        'Farm': null,
+        'Amount': 0,
+        'When': 0, //after how many sec
         'HasInput':true,
         'MaxInventory': 10
 
@@ -210,6 +210,21 @@ const types = {
     ],
     gas:[]
 }
+
+const recipes = {
+    sand_to_glass :{
+        machineFor: 'smelter',
+        inputRecipe: {
+           item: 'sand',
+           amount: 1
+        },
+        outputRecipe: {
+           item: 'molten_glass',
+           amount: 1
+        }
+    }
+}
+
 
 const placementConditions  = {
     test_machine:{
@@ -321,7 +336,7 @@ function Init(){
             var tx = x*Tile_Size
             var ty = y*Tile_Size
             
-            const TileType = Math.random() < 0.80 ? 'grass' : 'water';
+            const TileType = Math.random() < 0.80 ? 'grass' : 'sand';
             row.push({x: tx,y: ty,type: TileType, inventory:{amount:0,item:null},timer:0,output:null,input:null,degrees:0,machine:null, inventory2 :{active:false,item:null,amount:null}});
             drawTile(tx,ty,TileType)
 
@@ -366,71 +381,191 @@ function tileExists(x, y) {
     }
 }
 
-//idk what the hell this shit is bro 
-function transferInventorys(Ax,Ay,Bx,By, Amount){
-    if(tileExists(Ax,Ay)&& tileExists(Bx,By)){
-        let Destination = Tiles[By][Bx]
-        let Inputer = Tiles[Ay][Ax]
-        if(Destination.input == null){
-            return
-        }
-
-        if(containers[Destination.machine] != undefined) {
-            if(containers[Destination.machine].TypeInputed && containers[Destination.machine].TypeInputed != null){
-               if(types[containers[Destination.machine].TypeInputed]){
-                var CorrectType = false
-                    for(let n = 0; n < types[containers[Destination.machine].TypeInputed].length; n++) {
-                       if (types[containers[Destination.machine].TypeInputed][n] == Inputer.inventory.item){
-                        CorrectType = true
-                        break
-                       }  
-                    }
-                   
-                    //code to be edited
-                    if(CorrectType == true){
-                       
-                       
-                        if(MachineInstructions[Destination.machine] && Destination.inventory2.active){
-                            console.log('dual machine, containter and machine')
-                          return
-                        }
-                    
-                        if(Destination.inventory.item == null || Destination.inventory.item == Inputer.inventory.item ) {
-                         if (Destination.inventory.amount < containers[Destination.machine].MaxInventory && Inputer.inventory.amount >= Amount){
-                            Destination.inventory.amount+=Amount
-                            Inputer.inventory.amount -= Amount
-                            Destination.inventory.item = Inputer.inventory.item
-                                if(Inputer.inventory.amount == 0){
-                                    Inputer.inventory.item = null;
-                                }
-                          }else{
-                     }
-                }
-                    }
-               }
-            } else{
-                //this is if its not picky about whats being inputed
-               if(Destination.inventory.item == null || Destination.inventory.item == Inputer.inventory.item ) {
-                         if (Destination.inventory.amount < containers[Destination.machine].MaxInventory && Inputer.inventory.amount >= Amount){
-                            Destination.inventory.amount+=Amount
-                            Inputer.inventory.amount -= Amount
-                            Destination.inventory.item = Inputer.inventory.item
-                                if(Inputer.inventory.amount == 0){
-                                    Inputer.inventory.item = null;
-                                }
-                          }else{
-                            //  warn
-                     }
-                } 
+//doesnt require 2 or 3 items
+function process(Currentmachine) {
+    for (let key in recipes) {
+        const recipe = recipes[key];
+        if (recipe.machineFor == Currentmachine.machine) {
+            if(Currentmachine.inventory.item == recipe.inputRecipe.item){
+                
             }
         }
-
-        
-    } else{
-        //warn
     }
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//pain
+
+//these are inventories
+function doTransfer(dest,source,Amount) {
+    console.warn('final step you did it')
+
+      dest.amount+=Amount
+      source.amount -= Amount
+      dest.item = source.item
+    if(source.amount == 0) source.item = null;
+}
+
+function transferInventorys(Ax,Ay,Bx,By, Amount){
+    //if both tiles exist then move on
+    if(tileExists(Ax,Ay)&& tileExists(Bx,By)){
+        let Destination = Tiles[By][Bx]
+        let Inputer = Tiles[Ay][Ax]
+
+        let inventory2State = Inputer.inventory2.active
+
+        //If there is a machine
+        let aMachine = containers[Destination.machine]
+        let TrueMachineInstructions = MachineInstructions[Destination.machine] ?? false;
+        let CorrectType = false
+
+        //if there is no input then cancel the function
+        if(Destination.input == null) return;
+      
+        if (aMachine) {
+            if(containers[Destination.machine].TypeInputed != null || containers[Destination.machine].TypeInputed != undefined){
+                //check if correct type
+               CorrectType = types[containers[Destination.machine].TypeInputed]?.includes(Inputer.inventory.item) ?? false;
+
+                if(CorrectType) {
+                    if(TrueMachineInstructions) {
+
+                        if(inventory2State) {
+                             console.log(1)
+                            changeAmounts(Amount,Destination,Inputer,inventory2State)
+                        } else if(inventory2State == false) {
+                            //need to debug
+                            changeAmounts(Amount,Destination,Inputer,inventory2State)
+                        }
+
+                    }
+                } 
+            
+                //2nd part will be worked on later
+                //
+            } else if(containers[Destination.machine].TypeInputed == null) {
+                 changeAmounts(Amount,Destination,Inputer,inventory2State)
+            }
+        }
+
+    } 
+}
+
+function changeAmounts(Amount, Destination, Inputer, AltInventory, ){
+    let typeUsed = containers[Destination.machine].TypeInputed
+    let Specific = false
+    if (typeUsed) Specific = true;
+
+    if(AltInventory) {
+        if (Specific) {
+            //check if the item the Destination has is the same as the input or if the Destination has no item but the item being inputed is ok
+             if ((Destination.inventory.item == null && typeUsed.includes(Inputer.inventory2.item)) || Destination.inventory.item == Inputer.inventory2.item) {
+                  if (Destination.inventory.amount < containers[Destination.machine].MaxInventory && Inputer.inventory2.amount >= Amount){
+                        doTransfer(Destination.inventory, Inputer.inventory2,Amount)
+                 } 
+             } 
+
+        } else if(Specific == false) { // Isnt specific
+            if (Destination.inventory.item == null || Inputer.inventory.item == Destination.inventory2.item) {
+            if (Destination.inventory.amount < containers[Destination.machine].MaxInventory && Inputer.inventory2.amount >= Amount){
+                        doTransfer(Destination.inventory, Inputer.inventory2,Amount)
+                } 
+       } 
+        }
+    } else { //Doesnt Use Inventory2 aka AltInventory
+         if (Specific) {
+            //check if the item the Destination has is the same as the input or if the Destination has no item but the item being inputed is ok
+             if ((Destination.inventory.item == null && typeUsed.includes(Inputer.inventory.item)) || Destination.inventory.item == Inputer.inventory.item) {
+                  if (Destination.inventory.amount < containers[Destination.machine].MaxInventory && Inputer.inventory.amount >= Amount){
+                     doTransfer(Destination.inventory, Inputer.inventory,Amount)          
+                 } 
+             }
+    } else {
+       if (Destination.inventory == null || Inputer.inventory.item == Destination.inventory.item) {
+            if (Destination.inventory.amount < containers[Destination.machine].MaxInventory && Inputer.inventory.amount >= Amount){
+                             doTransfer(Destination.inventory, Inputer.inventory,Amount)
+                }
+       }
+    }
+}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//rotation
 document.addEventListener("keydown", (r) => {
     if(ItemSelected){
         if(angle != 360){
@@ -568,7 +703,6 @@ function tick(currentTime) {
         }
     }  
 
-
     RedrawGrid()
      if (HoveredTileX !== null && HoveredTileY !== null ) {
         if(ItemSelected == 'bucket'){
@@ -584,5 +718,8 @@ function tick(currentTime) {
     requestAnimationFrame(tick)
 }
 
+
+let testTable = {x: 0,y: 0,type: 'grass', inventory:{amount:10,item:'sand'},timer:0,output:null,input:null,degrees:0,machine:'smelter', inventory2 :{active:false,item:null,amount:null}}
+process(testTable)
 Init()
 requestAnimationFrame(tick)
