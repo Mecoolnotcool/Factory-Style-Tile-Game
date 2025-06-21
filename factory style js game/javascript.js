@@ -186,22 +186,6 @@ const opposites = {
     'top':'bottom'
 }
 
-const Images = {
-    grass: new Image(),
-    water: new Image(),
-    test_machine: new Image(),
-    pipe: new Image(),
-    fluid_tank: new Image(),
-    pipe_turn: new Image(),
-    bucket: new Image(),
-    sand: new Image(),
-    shovel: new Image(),
-    dirt: new Image(),
-    digger: new Image(),
-    test: new Image(),
-    smelter: new Image(),
-    sell_machine: new Image(),
-}
 
 const Straightdirections = {
   0 : {
@@ -310,20 +294,60 @@ const placementConditions  = {
 const tools = ['shovel', 'test', 'bucket'];
 
 
-Images.grass.src = 'images/grass.png';
-Images.water.src = 'images/water.png';
-Images.test_machine.src = 'images/test_machine.png';
-Images.pipe.src = 'images/pipe.png';
-Images.fluid_tank.src = 'images/fluid_tank.png';
-Images.pipe_turn.src = 'images/pipe_turn.png';
-Images.bucket.src = 'images/bucket.png';
-Images.shovel.src = 'images/shovel.png';
-Images.sand.src = 'images/sand.png';
-Images.dirt.src = 'images/dirt.png';
-Images.digger.src = 'images/digger.png';
-Images.test.src = 'images/test.png';
-Images.smelter.src = 'images/smelter.png';
-Images.sell_machine.src = 'images/sell_machine.png';
+    const TilesWithImages = [
+    'grass',
+    'water',
+    'test_machine',
+    'pipe',
+    'fluid_tank',
+    'pipe_turn',
+    'bucket',
+    'shovel',
+    'sand',
+    'dirt',
+    'digger',
+    'test',
+    'smelter',
+    'sell_machine',
+    'glass_molder'
+];
+
+const Images = {};
+
+for (const name of TilesWithImages) {
+        const img = new Image();
+        img.src = `images/${name}.png`;
+        Images[name] = img;
+}
+
+
+function preloadImages(names, onComplete) {
+    let loaded = 0;
+    const total = names.length;
+
+    for (const name of names) {
+        const img = new Image();
+        img.src = `images/${name}.png`;
+
+        img.onload = () => {
+            loaded++;
+            if (loaded === total) {
+                onComplete(); // All images are ready
+            }
+        };
+
+        img.onerror = () => {
+            console.warn(`Failed to load image: ${name}`);
+            loaded++;
+            if (loaded === total) {
+                onComplete(); // Proceed even if some fail
+            }
+        };
+
+        Images[name] = img;
+    }
+}
+
 
 //functions
 function drawTile(x,y,type,degrees){
@@ -333,7 +357,7 @@ function drawTile(x,y,type,degrees){
     } 
    
     const img = Images[type]
-    if(img && img.complete){
+    if(img && img.complete === true){
         ctx.save(); // save the current canvas state
         ctx.translate(x + Tile_Size / 2, y + Tile_Size / 2); // move to the center of the image
         ctx.rotate(degrees*(Math.PI / 180)); // rotate the canvas
@@ -356,7 +380,7 @@ function drawMachine(x,y,machine,degrees){
     } 
    
     const img = Images[machine]
-    if(img && img.complete){
+    if(img && img.complete === true){
         ctx.save(); // save the current canvas state
         ctx.translate(x + Tile_Size / 2, y + Tile_Size / 2); // move to the center of the image
         ctx.rotate(degrees*(Math.PI / 180)); // rotate the canvas
@@ -709,6 +733,33 @@ function tick(currentTime) {
 let testTable = {x: 0,y: 0,type: 'grass', inventory:{amount:10,item:'sand'},timer:0,output:null,input:null,degrees:0,machine:'smelter', inventory2 :{active:true,item:null,amount:null}}
 process(testTable)
 
+preloadImages(TilesWithImages, () => {
+    console.log("All images loaded.");
+    Init(); 
+});
 
-Init()
 requestAnimationFrame(tick)
+
+function saveData() {
+    localStorage.clear()
+    var data = {
+        TileData :  JSON.stringify(Tiles),
+        CashData : cash
+    }
+    localStorage.setItem('gameData', JSON.stringify(data));
+    // if(JSON.parse(localStorage.getItem('gameData')) == data) console.log("saved data"); else console.warn('failed to save data');
+}
+
+function loadData() {
+    var data;
+     if(localStorage.getItem('gameData') === null ) {
+           return
+    } else {
+
+        data = JSON.parse(localStorage.getItem('gameData'))
+        
+        cash = data.CashData
+        Tiles = JSON.parse(data.TileData)
+        
+    }
+}
