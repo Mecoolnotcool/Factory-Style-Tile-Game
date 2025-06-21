@@ -15,7 +15,6 @@ let angle = 0
 
 let cash = 0;
 let CashTextBox = document.getElementById('cashText');
-CashTextBox.textContent = cash;
 
 //Shop items
 const ShopItems = [
@@ -238,6 +237,13 @@ const types = {
     ]
 }
 
+const sellValues = {
+    water: 1,
+    molten_glass: -10,
+    sand: 3,
+    glass: 100,
+};
+
 const recipes = {
     sand_to_glass :{
         machineFor: 'smelter',
@@ -294,7 +300,7 @@ const placementConditions  = {
 const tools = ['shovel', 'test', 'bucket'];
 
 
-    const TilesWithImages = [
+const TilesWithImages = [
     'grass',
     'water',
     'test_machine',
@@ -472,12 +478,15 @@ function tileExists(x, y) {
 
 
 function sellMachine(Tile) {
+   let itemToBeSold = Tile.inventory.item
+   if(itemToBeSold in sellValues) {
     if ( Tile.inventory.item && Tile.inventory.amount > 0) {
         Tile.inventory.amount -= 1
-        cash += 10
-        console.log('Just sold:',Tile.inventory.item, 'For 10 dollars')
+        cash += sellValues[itemToBeSold]
+        console.log('Just sold:',Tile.inventory.item, 'For ',sellValues[itemToBeSold],' dollars')
         if (Tile.inventory.amount == 0) Tile.inventory.item = null;
     }
+   } 
 }
 
 function craft() {}
@@ -671,6 +680,7 @@ let LastTime = performance.now();
 function tick(currentTime) {
     let deltatime = (currentTime - LastTime) / 1000; //delta time meaning most accurate time
     LastTime = currentTime;
+    CashTextBox.textContent = "Money: " + cash;
     
     for (let y = 0; y < Tiles.length; y++) {
         for (let x = 0; x < Tiles[y].length; x++) {
@@ -747,10 +757,11 @@ function saveData() {
         CashData : cash
     }
     localStorage.setItem('gameData', JSON.stringify(data));
-    // if(JSON.parse(localStorage.getItem('gameData')) == data) console.log("saved data"); else console.warn('failed to save data');
+    confirm('saved current data')
 }
 
-function loadData() {
+function loadData(InputedData) {
+    if(InputedData != null) return;
     var data;
      if(localStorage.getItem('gameData') === null ) {
            return
