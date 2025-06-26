@@ -419,25 +419,48 @@ function shop(){
     }
 }
 
+function generateMap(inputedSeed) {
+        Tiles = [] 
+          let setseed = Math.random()
+          if (inputedSeed != null ||inputedSeed != undefined ) setseed = inputedSeed;
+          noise.seed(setseed); 
+          const scale = 0.15
+          console.log('seed is',setseed)
+
+        for (let y = 0; y <CanvasHeight/Tile_Size; y++) {
+            const row = []
+            for (let x = 0; x <CanvasWidth/Tile_Size; x++) {
+                var tx = x*Tile_Size
+                var ty = y*Tile_Size
+
+                 const value = noise.perlin2(x * scale, y * scale);
+                 const normalized = (value + 1) / 2; // convert from [-1,1] to [0,1]
+
+                let TileType 
+
+                 if (normalized < 0.35) {
+                    TileType = 'water';   // pond
+                } else if (normalized < 0.42) {
+                    TileType = 'sand';    // beach
+                } else{
+                    TileType = 'grass';   // land
+                }
+                
+               
+                row.push({x: tx,y: ty,type: TileType, inventory:{amount:0,item:null},timer:0,output:null,input:null,degrees:0,machine:null, inventory2 :{active:false,item:null,amount:null}});
+                drawTile(tx,ty,TileType)
+
+            }
+            Tiles.push(row);
+        }
+}
 
 function Init(){
     console.log('game is starting')
 
     //Generate Grid
-
-    for (let y = 0; y <CanvasHeight/Tile_Size; y++) {
-        const row = []
-        for (let x = 0; x <CanvasWidth/Tile_Size; x++) {
-            var tx = x*Tile_Size
-            var ty = y*Tile_Size
-            
-            const TileType = Math.random() < 0.80 ? 'grass' : 'sand';
-            row.push({x: tx,y: ty,type: TileType, inventory:{amount:0,item:null},timer:0,output:null,input:null,degrees:0,machine:null, inventory2 :{active:false,item:null,amount:null}});
-            drawTile(tx,ty,TileType)
-
-        }
-          Tiles.push(row);
-    }
+    generateMap();
+    
     console.log('grid generated')
     shop()
 }
@@ -749,6 +772,16 @@ preloadImages(TilesWithImages, () => {
 });
 
 requestAnimationFrame(tick)
+
+function setCutstomSeed() {
+    let input = prompt('Input a seed for the map generation')
+    if(input != null) {
+        generateMap(input)
+        confirm('seed set to ' + input)
+    } else{
+        console.warn('no seed provided')
+    }
+}
 
 function saveData() {
     localStorage.clear()
