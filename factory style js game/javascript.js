@@ -757,16 +757,16 @@ function loadData(InputedData) {
 
 
 function shop(){
-    const shopContainer = document.getElementById("shop");
+    const shopContainer = document.getElementById("Shop");
     shopContainer.innerHTML = ''; // clear existing buttons
 
     ShopItems.forEach(item => {
         const button = document.createElement("button");
         button.className = "shop-button";
+        button.id = 'jobs'
 
         button.innerHTML = `
-            <img src="${item.image}" width="32" height="32"><br>
-            ${item.Name}<br>$${item.Price}
+           <br> ${item.Name}<br>$${item.Price}
         `;
 
         button.onclick = () => {
