@@ -6,7 +6,7 @@ let CanvasWidth = 1000
 let CanvasHeight = 1000
 
 //tile stuff
-let Tile_Size = 50
+let Tile_Size = 50 //regular is 50
 let Tiles = []
 
 let ItemSelected = null
@@ -20,80 +20,58 @@ let CashTextBox = document.getElementById('cashText');
 const ShopItems = [
     {
         Name: "test_machine",
-        Width: Tile_Size,
-        Height: Tile_Size,
-        X: 10,
-        Y: CanvasHeight + 25 
+        Price: 10,
+        Id:1,
     },
     {
         Name: "pipe",
-        Width: Tile_Size,
-        Height: Tile_Size,
-        X: 10,
-        Y: CanvasHeight + 25 
+        Price: 10,
+        Id:2,
     },
     {
         Name: "pipe_turn",
-        Width: Tile_Size,
-        Height: Tile_Size,
-        X: 10,
-        Y: CanvasHeight + 25 
+        Price: 10,
+        Id:3,
     },
      {
         Name: "fluid_tank",
-        Width: Tile_Size,
-        Height: Tile_Size,
-        X: 10,
-        Y: CanvasHeight + 25 
+        Price: 10,
+        Id:4,
     },
      {
         Name: "smelter",
-        Width: Tile_Size,
-        Height: Tile_Size,
-        X: 10,
-        Y: CanvasHeight + 25 
+        Price: 10,
+        Id:5,
     },
      {
         Name: "glass_molder",
-        Width: Tile_Size,
-        Height: Tile_Size,
-        X: 10,
-        Y: CanvasHeight + 25 
+        Price: 10,
+        Id:6,
     },
     {
         Name: "digger",
-        Width: Tile_Size,
-        Height: Tile_Size,
-        X: 10,
-        Y: CanvasHeight + 25 
+        Price: 10,
+        Id:7,
     },
-    // {
-    //     Name: "bucket",
-    //     Width: Tile_Size,
-    //     Height: Tile_Size,
-    //     X: 10,
-    //     Y: CanvasHeight + 25 
-    // },
-    //  {
-    //     Name: "shovel",
-    //     Width: Tile_Size,
-    //     Height: Tile_Size,
-    //     X: 10,
-    //     Y: CanvasHeight + 25 
-    // },
+    {
+        Name: "bucket",
+        Price: 10,
+        Id:8,
+    },
+     {
+        Name: "shovel",
+        Price: 10,
+        Id:9,
+    },
     {
         Name: "test",
-        Width: Tile_Size,
-        Height: Tile_Size,
-        X: 10,
-        Y: CanvasHeight + 25 
+        Price: 10,
+        Id:10,
     },
     {
         Name: "sell_machine",
-        Width: Tile_Size,
-        Height: Tile_Size,
-        X: 10,
-        Y: CanvasHeight + 25 
+        Price: 10,
+        Id:11,
     },
  
 ];
@@ -402,27 +380,12 @@ function drawMachine(x,y,machine,degrees){
     }
 }
 
-function shop(){
-     for (let i = 0; i < ShopItems.length; i++) {
-        const img = Images[ShopItems[i].Name]
-        if(img && img.complete){
-            ctx.drawImage(img, ShopItems[i].X+i*100, ShopItems[i].Y, Tile_Size, Tile_Size);
-            ShopItems[i].X = ShopItems[i].X+i*100;
-        } else{
-            ctx.beginPath();
-            ctx.fillStyle = 'grey';
-            ctx.rect(ShopItems[i].X+i*100, ShopItems[i].Y, Tile_Size, Tile_Size);
-            ctx.fill();    
-            ctx.stroke();
-            ShopItems[i].X = ShopItems[i].X+i*100;
-        }
-    }
-}
-
 function generateMap(inputedSeed) {
         Tiles = [] 
-          let setseed = Math.random()
-          if (inputedSeed != null ||inputedSeed != undefined ) setseed = inputedSeed;
+        var Max = 1000
+        var Min = 1
+          let setseed = Math.floor(Math.random() * (Max - Min + 1)) + Min; //random seed
+          if (inputedSeed != null ||inputedSeed != undefined ) setseed = inputedSeed; console.clear();
           noise.seed(setseed); 
           const scale = 0.15
           console.log('seed is',setseed)
@@ -462,7 +425,6 @@ function Init(){
     generateMap();
     
     console.log('grid generated')
-    shop()
 }
 
 function RedrawGrid() { //this draws the grid according to the already generated stuff
@@ -687,16 +649,6 @@ canvas.addEventListener('mousedown', function(event) {
         }
         
     } 
-    else {
-        if(mouseY >= 1000 && mouseY <= 1100 && mouseX >= 6 && mouseX <= 1000){
-           for (let i = 0; i < ShopItems.length; i++) {
-            var item = ShopItems[i]
-                if(mouseX >= item.X && mouseX <= item.X + item.Width && mouseY >= item.Y && mouseY <= item.Y + item.Height  ) {
-                    ItemSelected = item.Name
-                }
-            }
-        }
-    }
 });
 
 let LastTime = performance.now();
@@ -761,11 +713,6 @@ function tick(currentTime) {
     requestAnimationFrame(tick)
 }
 
-
-
-let testTable = {x: 0,y: 0,type: 'grass', inventory:{amount:10,item:'sand'},timer:0,output:null,input:null,degrees:0,machine:'smelter', inventory2 :{active:true,item:null,amount:null}}
-process(testTable)
-
 preloadImages(TilesWithImages, () => {
     console.log("All images loaded.");
     Init(); 
@@ -807,3 +754,26 @@ function loadData(InputedData) {
         
     }
 }
+
+
+function shop(){
+    const shopContainer = document.getElementById("shop");
+    shopContainer.innerHTML = ''; // clear existing buttons
+
+    ShopItems.forEach(item => {
+        const button = document.createElement("button");
+        button.className = "shop-button";
+
+        button.innerHTML = `
+            <img src="${item.image}" width="32" height="32"><br>
+            ${item.Name}<br>$${item.Price}
+        `;
+
+        button.onclick = () => {
+            
+        };
+
+        shopContainer.appendChild(button);
+    });
+}
+shop()
