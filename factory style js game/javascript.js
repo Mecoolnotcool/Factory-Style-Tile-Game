@@ -10,8 +10,8 @@ let originalTileSize = 50;
 let scrollP = 1; 
 let Tile_Size = originalTileSize*scrollP 
 
-let Rows = 40
-let Cols = 40
+let Rows = 100
+let Cols = 100
 
 
 let Tiles = []
@@ -398,7 +398,7 @@ function drawMachine(x,y,machine,degrees){
         ctx.stroke();
     }
 }
-var Max = 65536
+var Max = 100
 var Min = 1
 let setseed = Math.floor(Math.random() * (Max - Min + 1)) + Min; //random seed
 function generateMap(inputedSeed) {
@@ -408,9 +408,9 @@ function generateMap(inputedSeed) {
           const scale = 0.15
           console.log('seed is',setseed)
 
-        for (let y = 0; y <CanvasHeight/Tile_Size; y++) {
+        for (let y = 0; y <Cols; y++) {
             const row = []
-            for (let x = 0; x <CanvasWidth/Tile_Size; x++) {
+            for (let x = 0; x <Rows; x++) {
                 var tx = x*Tile_Size
                 var ty = y*Tile_Size
 
@@ -447,46 +447,69 @@ function Init(){
 
 
 let camera = {
-  x: 1,
-  y: 5,
+  x: 0,
+  y: 0  ,
   width: canvas.width,
   height: canvas.height
 };
 
-const startCol = Math.floor(camera.x / Tile_Size);
-const endCol = startCol + camera.width / Tile_Size;
 
-const startRow = Math.floor(camera.y / Tile_Size);
-const endRow = startRow + camera.height / Tile_Size;
+let startCol = Math.floor(camera.x / Tile_Size);
+let endCol = Math.ceil((camera.x + camera.width) / Tile_Size);
 
-const offsetX = -camera.x + startCol * Tile_Size;
-const offsetY = -camera.y + startRow * Tile_Size;
+let startRow = Math.floor(camera.y / Tile_Size);
+let endRow = Math.ceil((camera.y + camera.height) / Tile_Size);
+
+let offsetX = -camera.x + startCol * Tile_Size;
+let offsetY = -camera.y + startRow * Tile_Size;
+
 
 function RenderTiles() {
-    for (let c = startCol; c <= endCol; c++) {
-         for (let r = startRow; r <= endRow; r++) {
+    ctx.clearRect(0,0,CanvasWidth,CanvasHeight)
+    startCol = Math.floor(camera.x / Tile_Size);
+    endCol = Math.ceil((camera.x + camera.width) / Tile_Size);
+
+    startRow = Math.floor(camera.y / Tile_Size);
+    endRow = Math.ceil((camera.y + camera.height) / Tile_Size);
+
+    offsetX = -camera.x + startCol * Tile_Size;
+    offsetY = -camera.y + startRow * Tile_Size;
+
+    for (let c = startCol; c < endCol; c++) {
+        for (let r = startRow; r < endRow; r++) {
             const tile = Tiles[c]?.[r];
             if (tile !== undefined) {
-            const x = (c - startCol) * Tile_Size + offsetX;
-            const y = (r - startRow) * Tile_Size + offsetY;
-                drawTile(x,y,tile.type,tile.degrees)
-         }
+                const x = (c - startCol) * Tile_Size + offsetX;
+                const y = (r - startRow) * Tile_Size + offsetY;
+                drawTile(x, y, tile.type, tile.degrees);
+            }
         }
     }
 }
 
-
 function RedrawGrid() { //this draws the grid according to the already generated stuff
-    ctx.clearRect(0,0,CanvasWidth,CanvasHeight)
-     for (let y = 0; y < Tiles.length; y++) {
-        for (let x = 0; x < Tiles[y].length; x++) {
-            const tile = Tiles[y][x];
-            drawTile(tile.x, tile.y, tile.type,tile.degrees);
-            if(tile.machine != null){
-                drawMachine(tile.x, tile.y,tile.machine,tile.degrees)
-            }
-        }
-    }  
+   RenderTiles();
+}
+
+// function RedrawGrid() { //this draws the grid according to the already generated stuff
+//     ctx.clearRect(0,0,CanvasWidth,CanvasHeight)
+//      for (let y = 0; y < Tiles.length; y++) {
+//         for (let x = 0; x < Tiles[y].length; x++) {
+//             const tile = Tiles[y][x];
+//             drawTile(tile.x, tile.y, tile.type,tile.degrees);
+//             if(tile.machine != null){
+//                 drawMachine(tile.x, tile.y,tile.machine,tile.degrees)
+//             }
+//         }
+//     }  
+// }
+
+function tileExists(x, y) {
+    if (y >= 0 && y < Tiles.length &&Tiles[y] &&x >= 0 && x < Tiles[y].length &&Tiles[y][x]) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 function AdjacentTiles(x,y) {
@@ -502,11 +525,12 @@ function AdjacentTiles(x,y) {
     return TilesNearby;
 }
 
-function tileExists(x, y) {
-    if (y >= 0 && y < Tiles.length &&Tiles[y] &&x >= 0 && x < Tiles[y].length &&Tiles[y][x]) {
-        return true;
+function getTile(x, y) {
+    if (tileExists(x, y)) {
+        return Tiles[y][x];
     } else {
-        return false;
+        console.warn('Tile does not exist at coordinates:', x, y);
+        return null;
     }
 }
 
@@ -611,15 +635,39 @@ function checkIfTransfer(Amount, Destination, Inputer, AltInventory, specific){
    
 }
 
-//rotation
+//Keyboard controls
 document.addEventListener('keydown', function(event) {
    if(event.key === 'r' || event.key === 'R') {
-    if(ItemSelected){
-        if(angle != 360){
-            angle+=90
-        } else{angle=0}
-    }
+        if(ItemSelected){
+            if(angle != 360){
+                angle+=90
+            } else{angle=0}
+        }
    }
+   
+   if(camera.y > -200 && camera.y < 4200) {
+    if(event.key === 'w' || event.key === 'W') {
+       camera.y -= 100
+       console.log('camera y',camera.y)
+   } else if(event.key === 's' || event.key === 'S') {
+      camera.y += 100
+      console.log('camera y',camera.y)
+   }
+   }
+
+
+   if(camera.x > -200 && camera.x < 4200) {
+        if(event.key === 'd' || event.key === 'D') {
+            camera.x += 100
+            console.log('camera x',camera.x)
+   } else if(event.key === 'a' || event.key === 'A') {
+            camera.x -= 100
+            console.log('camera x',camera.x)
+   }
+   }
+
+
+
 });
 
 // for placement of tiles (in the future)
@@ -648,14 +696,14 @@ canvas.addEventListener('mousedown', function(event) {
     const mouseX = event.clientX - rect.left
     const mouseY = event.clientY - rect.top
 
-    const tileX = Math.floor(mouseX / Tile_Size); 
-    const tileY = Math.floor(mouseY /Tile_Size); 
-    
+    const tileX = Math.floor((mouseX + camera.x) / Tile_Size);
+    const tileY = Math.floor((mouseY + camera.y) / Tile_Size);
+
     if (tileX >= 0 && tileX < TilesHorz &&tileY >= 0 && tileY < TilesVert) {
         if(ItemSelected != null){
             if(tools.includes(ItemSelected) ) {
                 if(ItemSelected == 'test'){
-                    console.log(Tiles[tileY][tileX])
+                    console.log(getTile(tileX,tileY))
                 }else if(ItemSelected == 'bucket'){
                     if(Tiles[tileY][tileX].type == 'water'){
                         Tiles[tileY][tileX].type = 'sand'
@@ -850,7 +898,7 @@ function shop(){
 //This is not used in the game but can be used to find the best seed for a specific type of tile
 //Checks through 2^16 seeds which is 65536 seeds and at the moment it is the maximum seed value
 //It will log the best seed for grass, sand and water
-function searchForBestSeed(maxSeed = 65536) {
+function searchForBestSeed(maxSeed = 100) {
     let bestSeedGrass = 0;
     let bestSeedSand = 0;
     let bestSeedWater = 0;
