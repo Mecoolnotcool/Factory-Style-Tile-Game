@@ -6,70 +6,89 @@ let CanvasWidth = 1000
 let CanvasHeight = 1000
 
 //tile stuff
-let Tile_Size = 50 //regular is 50
+let originalTileSize = 50; 
+let scrollP = 1; 
+let Tile_Size = originalTileSize*scrollP 
+
+let Rows = 40
+let Cols = 40
+
+
 let Tiles = []
 
 let ItemSelected = null
 
 let angle = 0
 
-let cash = 0;
+let cash = 1000;
 let CashTextBox = document.getElementById('cashText');
+
 
 //Shop items
 const ShopItems = [
     {
         Name: "test_machine",
+        displayName: "Test generator",
         Price: 10,
         Id:1,
     },
     {
         Name: "pipe",
+        displayName: "Pipe",
         Price: 10,
         Id:2,
     },
     {
         Name: "pipe_turn",
+        displayName: "Pipe Turn",
         Price: 10,
         Id:3,
     },
      {
         Name: "fluid_tank",
+        displayName: "Fluid Tank",
         Price: 10,
         Id:4,
     },
      {
         Name: "smelter",
+        displayName: "Smelter",
         Price: 10,
         Id:5,
     },
      {
         Name: "glass_molder",
+        displayName: "Glass Molder",
         Price: 10,
         Id:6,
     },
     {
         Name: "digger",
+        displayName: "Digger",
         Price: 10,
         Id:7,
     },
     {
         Name: "bucket",
-        Price: 10,
+        displayName: "Bucket",
+        Price: 0,
         Id:8,
     },
      {
         Name: "shovel",
-        Price: 10,
+        displayName: "Shovel",
+        Price: 0,
         Id:9,
     },
     {
         Name: "test",
-        Price: 10,
+        displayName: "Tile Info Tool",
+        Price: 0,
         Id:10,
     },
     {
         Name: "sell_machine",
+        displayName: "Sell Device",
         Price: 10,
         Id:11,
     },
@@ -379,13 +398,12 @@ function drawMachine(x,y,machine,degrees){
         ctx.stroke();
     }
 }
-
+var Max = 65536
+var Min = 1
+let setseed = Math.floor(Math.random() * (Max - Min + 1)) + Min; //random seed
 function generateMap(inputedSeed) {
         Tiles = [] 
-        var Max = 1000
-        var Min = 1
-          let setseed = Math.floor(Math.random() * (Max - Min + 1)) + Min; //random seed
-          if (inputedSeed != null ||inputedSeed != undefined ) setseed = inputedSeed; console.clear();
+          if (inputedSeed != null ||inputedSeed != undefined ) setseed = inputedSeed; 
           noise.seed(setseed); 
           const scale = 0.15
           console.log('seed is',setseed)
@@ -426,6 +444,37 @@ function Init(){
     
     console.log('grid generated')
 }
+
+
+let camera = {
+  x: 1,
+  y: 5,
+  width: canvas.width,
+  height: canvas.height
+};
+
+const startCol = Math.floor(camera.x / Tile_Size);
+const endCol = startCol + camera.width / Tile_Size;
+
+const startRow = Math.floor(camera.y / Tile_Size);
+const endRow = startRow + camera.height / Tile_Size;
+
+const offsetX = -camera.x + startCol * Tile_Size;
+const offsetY = -camera.y + startRow * Tile_Size;
+
+function RenderTiles() {
+    for (let c = startCol; c <= endCol; c++) {
+         for (let r = startRow; r <= endRow; r++) {
+            const tile = Tiles[c]?.[r];
+            if (tile !== undefined) {
+            const x = (c - startCol) * Tile_Size + offsetX;
+            const y = (r - startRow) * Tile_Size + offsetY;
+                drawTile(x,y,tile.type,tile.degrees)
+         }
+        }
+    }
+}
+
 
 function RedrawGrid() { //this draws the grid according to the already generated stuff
     ctx.clearRect(0,0,CanvasWidth,CanvasHeight)
@@ -493,8 +542,6 @@ function process(Currentmachine,inv) {
         }
     }
 }
-
-//pain
 
 //these are inventories
 function doTransfer(dest,source,Amount) {
@@ -565,12 +612,14 @@ function checkIfTransfer(Amount, Destination, Inputer, AltInventory, specific){
 }
 
 //rotation
-document.addEventListener("keydown", (r) => {
+document.addEventListener('keydown', function(event) {
+   if(event.key === 'r' || event.key === 'R') {
     if(ItemSelected){
         if(angle != 360){
             angle+=90
         } else{angle=0}
     }
+   }
 });
 
 // for placement of tiles (in the future)
@@ -755,6 +804,24 @@ function loadData(InputedData) {
     }
 }
 
+function buyItem(itemName) {
+   if (!itemName) {
+     console.warn('No item name provided') 
+     return; 
+   }
+    const item = ShopItems.find(i => i.Name === itemName);
+    if (!item) {
+        console.warn('Item not found in shop');
+        return;
+    } else if (cash >= item.Price) {
+        cash -= item.Price;
+        ItemSelected = item.Name; // Set the selected item to the one purchased
+        console.log(`Bought ${item.displayName} for $${item.Price}. Remaining cash: $${cash}`);
+    } else {
+        console.warn('Not enough cash to buy this item');
+    }
+   
+}
 
 function shop(){
     const shopContainer = document.getElementById("Shop");
@@ -766,14 +833,78 @@ function shop(){
         button.id = 'jobs'
 
         button.innerHTML = `
-           <br> ${item.Name}<br>$${item.Price}
+           <br> ${item.displayName}<br>$${item.Price}
         `;
 
         button.onclick = () => {
-            
+            buyItem(item.Name);
         };
 
         shopContainer.appendChild(button);
     });
 }
+
+
+//cool function to find the best seed for grass, sand and water and more in the future
+//Does take a while to run so be patient
+//This is not used in the game but can be used to find the best seed for a specific type of tile
+//Checks through 2^16 seeds which is 65536 seeds and at the moment it is the maximum seed value
+//It will log the best seed for grass, sand and water
+function searchForBestSeed(maxSeed = 65536) {
+    let bestSeedGrass = 0;
+    let bestSeedSand = 0;
+    let bestSeedWater = 0;
+
+    let mostGrass = 0;
+    let mostSand = 0;
+    let mostWater = 0;
+
+    for (let seed = 0; seed <= maxSeed; seed++) {
+        generateMap(seed); 
+
+        let grassCount = 0;
+        let sandCount = 0;
+        let waterCount = 0;
+
+        for (let y = 0; y < Tiles.length; y++) {
+            for (let x = 0; x < Tiles[y].length; x++) {
+                const tileType = Tiles[y][x].type;
+
+                if (tileType === 'grass') grassCount++;
+                else if (tileType === 'sand') sandCount++;
+                else if (tileType === 'water') waterCount++;
+            }
+        }
+
+        if (grassCount > mostGrass) {
+            mostGrass = grassCount;
+            bestSeedGrass = seed;
+        }
+
+        if (sandCount > mostSand) {
+            mostSand = sandCount;
+            bestSeedSand = seed;
+        }
+
+        if (waterCount > mostWater) {
+            mostWater = waterCount;
+            bestSeedWater = seed;
+        }
+    }
+
+    console.log(`Best grass seed: ${bestSeedGrass} (${mostGrass} tiles)`);
+    console.log(`Best sand seed:  ${bestSeedSand} (${mostSand} tiles)`);
+    console.log(`Best water seed: ${bestSeedWater} (${mostWater} tiles)`);
+}
+
+
+const coolSeeds = {
+    wetlands: 5493,
+    desert: 15899,
+    grassland: 41631,
+};
+
+
+
+
 shop()
