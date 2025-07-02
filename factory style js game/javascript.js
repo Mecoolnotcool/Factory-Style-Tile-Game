@@ -14,6 +14,8 @@ let Tile_Size = originalTileSize*scrollP;
 let cols = 50;
 let rows = cols;
 
+let MovementSpeed = 50;
+
 
 let Tiles = [];
 
@@ -23,6 +25,8 @@ let angle = 0;
 
 let cash = 1000;
 let CashTextBox = document.getElementById('cashText');
+
+
 
 
 //Shop items
@@ -352,7 +356,6 @@ function preloadImages(names, onComplete) {
     }
 }
 
-
 //functions
 function drawTile(x,y,type,degrees){
     if(typeof x !== 'number' || typeof y !== 'number' || typeof Tile_Size !== 'number') {
@@ -439,6 +442,7 @@ function generateMap(inputedSeed) {
 
 function Init(){
     generateMap();
+    shop();
 }
 
 let camera = {
@@ -456,8 +460,6 @@ let endRow = Math.ceil((camera.y + camera.height) / Tile_Size);
 
 let offsetX = -camera.x + startCol * Tile_Size;
 let offsetY = -camera.y + startRow * Tile_Size;
-
-
 function RenderTiles() {
     ctx.clearRect(0,0,CanvasWidth,CanvasHeight)
     startCol = Math.floor(camera.x / Tile_Size);
@@ -484,9 +486,7 @@ function RenderTiles() {
     }
 }
 
-function RedrawGrid() { //this draws the grid according to the already generated stuff
-   RenderTiles();
-}
+
 
 function tileExists(x, y) {
     if (y >= 0 && y < Tiles.length &&Tiles[y] &&x >= 0 && x < Tiles[y].length &&Tiles[y][x]) {
@@ -616,37 +616,27 @@ function checkIfTransfer(Amount, Destination, Inputer, AltInventory, specific){
 
 //Keyboard controls
 document.addEventListener('keydown', function(event) {
-   if(event.key === 'r' || event.key === 'R') {
-        if(ItemSelected){
-            if(angle != 360){
-                angle+=90
-            } else{angle=0}
+        if(event.key === 'r' || event.key === 'R') {
+                if(ItemSelected){
+                    if(angle != 360){
+                        angle+=90
+                    } else{angle=0}
+                }
         }
-   }
-   
-   if(camera.y > -200 && camera.y < 4200) {
-    if(event.key === 'w' || event.key === 'W') {
-       camera.y -= Tile_Size
-       console.log('camera y',camera.y)
-   } else if(event.key === 's' || event.key === 'S') {
-      camera.y += Tile_Size
-      console.log('camera y',camera.y)
-   }
-   }
-
-
-   if(camera.x > -200 && camera.x < 4200) {
-        if(event.key === 'd' || event.key === 'D') {
-            camera.x += Tile_Size
+        if(event.key === 'w' && camera.y> 0) {
+            camera.y -= MovementSpeed
+            console.log('camera y',camera.y)
+        } else if(event.key === 's' && camera.y < 1500 )  {
+            camera.y += MovementSpeed
+            console.log('camera y',camera.y)
+        }   
+        if(event.key === 'd' && camera.x < 1500) {
+            camera.x += MovementSpeed
             console.log('camera x',camera.x)
-   } else if(event.key === 'a' || event.key === 'A') {
-            camera.x -= Tile_Size
+        } else if(event.key === 'a' && camera.x > 0) {
+            camera.x -= MovementSpeed
             console.log('camera x',camera.x)
-   }
-   }
-
-
-
+         }
 });
 
 // for placement of tiles (in the future)
@@ -775,7 +765,7 @@ function tick(currentTime) {
         }
     }  
 
-    RedrawGrid()
+    RenderTiles();
      if (HoveredTileX !== null && HoveredTileY !== null ) {
         if(ItemSelected == 'bucket'){
             ctx.globalAlpha = 0.5;
@@ -872,7 +862,6 @@ function shop(){
     });
 }
 
-
 //cool function to find the best seed for grass, sand and water and more in the future
 //Does take a while to run so be patient
 //This is not used in the game but can be used to find the best seed for a specific type of tile
@@ -925,11 +914,8 @@ function searchForBestSeed(maxSeed = 66536) {
     console.log(`Best water seed: ${bestSeedWater} (${mostWater} tiles)`);
 }
 
-
 const coolSeeds = {
     wetlands: 5493,
     desert: 15899,
     grassland: 41631,
 };
-
-shop(); // Initialize the shop when the script loads
