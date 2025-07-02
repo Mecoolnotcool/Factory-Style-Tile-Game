@@ -10,8 +10,9 @@ let originalTileSize = 50;
 let scrollP = 1; 
 let Tile_Size = originalTileSize*scrollP 
 
-let Rows = 100
-let Cols = 100
+//amount of tiles is cols*rows or just x^2 x being either cols or rows bc it is a square
+let cols = 50
+let rows = 50
 
 
 let Tiles = []
@@ -408,16 +409,15 @@ function generateMap(inputedSeed) {
           const scale = 0.15
           console.log('seed is',setseed)
 
-        for (let y = 0; y <Cols; y++) {
+         for (let y = 0; y <cols; y++) {
             const row = []
-            for (let x = 0; x <Rows; x++) {
-                var tx = x*Tile_Size
-                var ty = y*Tile_Size
-
+            for (let x = 0; x <rows; x++) {
+                 var tx = x*Tile_Size
+                 var ty = y*Tile_Size
                  const value = noise.perlin2(x * scale, y * scale);
                  const normalized = (value + 1) / 2; // convert from [-1,1] to [0,1]
 
-                let TileType 
+                 let TileType 
 
                  if (normalized < 0.35) {
                     TileType = 'water';   // pond
@@ -430,21 +430,15 @@ function generateMap(inputedSeed) {
                
                 row.push({x: tx,y: ty,type: TileType, inventory:{amount:0,item:null},timer:0,output:null,input:null,degrees:0,machine:null, inventory2 :{active:false,item:null,amount:null}});
                 drawTile(tx,ty,TileType)
-
             }
             Tiles.push(row);
         }
+       
 }
 
 function Init(){
-    console.log('game is starting')
-
-    //Generate Grid
     generateMap();
-    
-    console.log('grid generated')
 }
-
 
 let camera = {
   x: 0,
@@ -452,7 +446,6 @@ let camera = {
   width: canvas.width,
   height: canvas.height
 };
-
 
 let startCol = Math.floor(camera.x / Tile_Size);
 let endCol = Math.ceil((camera.x + camera.width) / Tile_Size);
@@ -482,6 +475,9 @@ function RenderTiles() {
                 const x = (c - startCol) * Tile_Size + offsetX;
                 const y = (r - startRow) * Tile_Size + offsetY;
                 drawTile(x, y, tile.type, tile.degrees);
+                if(tile.machine) {
+                    drawMachine(x, y, tile.machine, tile.degrees);
+                }
             }
         }
     }
@@ -490,19 +486,6 @@ function RenderTiles() {
 function RedrawGrid() { //this draws the grid according to the already generated stuff
    RenderTiles();
 }
-
-// function RedrawGrid() { //this draws the grid according to the already generated stuff
-//     ctx.clearRect(0,0,CanvasWidth,CanvasHeight)
-//      for (let y = 0; y < Tiles.length; y++) {
-//         for (let x = 0; x < Tiles[y].length; x++) {
-//             const tile = Tiles[y][x];
-//             drawTile(tile.x, tile.y, tile.type,tile.degrees);
-//             if(tile.machine != null){
-//                 drawMachine(tile.x, tile.y,tile.machine,tile.degrees)
-//             }
-//         }
-//     }  
-// }
 
 function tileExists(x, y) {
     if (y >= 0 && y < Tiles.length &&Tiles[y] &&x >= 0 && x < Tiles[y].length &&Tiles[y][x]) {
@@ -526,14 +509,8 @@ function AdjacentTiles(x,y) {
 }
 
 function getTile(x, y) {
-    if (tileExists(x, y)) {
-        return Tiles[y][x];
-    } else {
-        console.warn('Tile does not exist at coordinates:', x, y);
-        return null;
-    }
+    return Tiles[x][y]
 }
-
 
 function sellMachine(Tile) {
    let itemToBeSold = Tile.inventory.item
@@ -547,7 +524,9 @@ function sellMachine(Tile) {
    } 
 }
 
-function craft() {}
+function craft(){
+     return; //this is not used yet but will be used in the future
+}
 
 //turns one item into another
 function process(Currentmachine,inv) {
@@ -647,10 +626,10 @@ document.addEventListener('keydown', function(event) {
    
    if(camera.y > -200 && camera.y < 4200) {
     if(event.key === 'w' || event.key === 'W') {
-       camera.y -= 100
+       camera.y -= Tile_Size
        console.log('camera y',camera.y)
    } else if(event.key === 's' || event.key === 'S') {
-      camera.y += 100
+      camera.y += Tile_Size
       console.log('camera y',camera.y)
    }
    }
@@ -658,10 +637,10 @@ document.addEventListener('keydown', function(event) {
 
    if(camera.x > -200 && camera.x < 4200) {
         if(event.key === 'd' || event.key === 'D') {
-            camera.x += 100
+            camera.x += Tile_Size
             console.log('camera x',camera.x)
    } else if(event.key === 'a' || event.key === 'A') {
-            camera.x -= 100
+            camera.x -= Tile_Size
             console.log('camera x',camera.x)
    }
    }
@@ -689,57 +668,60 @@ canvas.addEventListener('mousemove',function(event) {
 
 //detects clicking on tile
 canvas.addEventListener('mousedown', function(event) {
-    const TilesHorz = CanvasWidth / Tile_Size; //how many tiles fit horozontially and vertically
-    const TilesVert = CanvasHeight / Tile_Size;
-
     const rect = canvas.getBoundingClientRect() //This has to be done bc sometimes the canvas is in the middle other times not so we adjust it
     const mouseX = event.clientX - rect.left
     const mouseY = event.clientY - rect.top
 
-    const tileX = Math.floor((mouseX + camera.x) / Tile_Size);
-    const tileY = Math.floor((mouseY + camera.y) / Tile_Size);
+    let CameraTileX = Math.floor(camera.x / Tile_Size); 
+    let CameraTileY = Math.floor(camera.y / Tile_Size)
+    
+    console.log('camera x',CameraTileX)
+    console.log('camera y',CameraTileY)
+    
+    const tileX = Math.floor((mouseX / Tile_Size) + CameraTileX); //Calculate the tile position based on the mouse position and camera offset
+    const tileY = Math.floor((mouseY /Tile_Size) + CameraTileY); //Calculate the tile position based on the mouse position and camera offset
 
-    if (tileX >= 0 && tileX < TilesHorz &&tileY >= 0 && tileY < TilesVert) {
+    if (tileExists(tileX, tileY)) {
         if(ItemSelected != null){
             if(tools.includes(ItemSelected) ) {
                 if(ItemSelected == 'test'){
                     console.log(getTile(tileX,tileY))
                 }else if(ItemSelected == 'bucket'){
-                    if(Tiles[tileY][tileX].type == 'water'){
-                        Tiles[tileY][tileX].type = 'sand'
+                    if(getTile(tileX,tileY).type == 'water'){
+                        getTile(tileX,tileY).type = 'sand'
                     }
                 } else if(ItemSelected == 'shovel'){
-                    if(Tiles[tileY][tileX].type == 'grass'){
-                        Tiles[tileY][tileX].type = 'dirt'
+                    if(getTile(tileX,tileY).type == 'grass'){
+                        getTile(tileX,tileY).type = 'dirt'
                 }}
-            } else if(Tiles[tileY][tileX]){
+            } else if(getTile(tileX,tileY)) {
                 if (placementConditions[ItemSelected] != undefined && placementConditions[ItemSelected] .blacklist){
                 for(let n = 0; n < placementConditions[ItemSelected].blacklist.length; n++) {
-                    if(Tiles[tileY][tileX].type ==  placementConditions[ItemSelected].blacklist[n] ){
+                    if(getTile(tileX,tileY).type ==  placementConditions[ItemSelected].blacklist[n] ){
                         console.warn('cant place')
                         return
                     }
                 }}
                 if(containers[ItemSelected] && containers[ItemSelected].Turn == false ){
-                    Tiles[tileY][tileX].output = Straightdirections[angle].output
-                    Tiles[tileY][tileX].input = Straightdirections[angle].input
+                    getTile(tileX,tileY).output = Straightdirections[angle].output
+                    getTile(tileX,tileY).input = Straightdirections[angle].input
                 } else {
                     if(containers[ItemSelected] && containers[ItemSelected].Turn == true){
-                        Tiles[tileY][tileX].output = Turndirections[angle].output
-                        Tiles[tileY][tileX].input = Turndirections[angle].input
+                        getTile(tileX,tileY).output = Turndirections[angle].output
+                        getTile(tileX,tileY).input = Turndirections[angle].input
                     } else {
                         if(MachineInstructions[ItemSelected]) {
                         if(MachineInstructions[ItemSelected].HasInput == false){
-                            Tiles[tileY][tileX].output = Straightdirections[angle].output
+                           getTile(tileX,tileY).output = Straightdirections[angle].output
                         } else{
-                             Tiles[tileY][tileX].output = Straightdirections[angle].output
-                             Tiles[tileY][tileX].input = Straightdirections[angle].input
+                             getTile(tileX,tileY).output = Straightdirections[angle].output
+                            getTile(tileX,tileY).input = Straightdirections[angle].input
                         }
                     }
                     }
                 }
-                Tiles[tileY][tileX].machine = ItemSelected
-                Tiles[tileY][tileX].degrees = angle
+                getTile(tileX,tileY).machine = ItemSelected
+                getTile(tileX,tileY).degrees = angle
                 ItemSelected = null
                 angle = 0
             } 
@@ -756,7 +738,7 @@ function tick(currentTime) {
     
     for (let y = 0; y < Tiles.length; y++) {
         for (let x = 0; x < Tiles[y].length; x++) {
-            var Tile = Tiles[y][x]
+            var Tile = getTile(x,y)
             if(MachineInstructions[Tile.machine] != undefined){
                 if(MachineInstructions[Tile.machine].RecipeMachine == false){
                     Tile.timer = (Tile.timer || 0) + deltatime;
@@ -916,7 +898,7 @@ function searchForBestSeed(maxSeed = 100) {
 
         for (let y = 0; y < Tiles.length; y++) {
             for (let x = 0; x < Tiles[y].length; x++) {
-                const tileType = Tiles[y][x].type;
+                const tileType = getTile(x,y).type;
 
                 if (tileType === 'grass') grassCount++;
                 else if (tileType === 'sand') sandCount++;
@@ -952,7 +934,7 @@ const coolSeeds = {
     grassland: 41631,
 };
 
+shop(); // Initialize the shop when the script loads
 
 
 
-shop()
