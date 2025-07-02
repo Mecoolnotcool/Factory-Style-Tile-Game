@@ -7,15 +7,14 @@ let CanvasHeight = 1000;
 
 //tile stuff
 let originalTileSize = 50; 
-let scrollP = 1; 
-let Tile_Size = originalTileSize*scrollP;
+let zoom = 1; 
+let Tile_Size = originalTileSize*zoom;
+let MinTileSize = 20
 
 //amount of tiles is cols*rows or just x^2 x being either cols or rows bc it is a square
 let cols = 50;
 let rows = cols;
-
 let MovementSpeed = 50;
-
 
 let Tiles = [];
 
@@ -25,9 +24,6 @@ let angle = 0;
 
 let cash = 1000;
 let CashTextBox = document.getElementById('cashText');
-
-
-
 
 //Shop items
 const ShopItems = [
@@ -486,8 +482,6 @@ function RenderTiles() {
     }
 }
 
-
-
 function tileExists(x, y) {
     if (y >= 0 && y < Tiles.length &&Tiles[y] &&x >= 0 && x < Tiles[y].length &&Tiles[y][x]) {
         return true;
@@ -625,18 +619,23 @@ document.addEventListener('keydown', function(event) {
         }
         if(event.key === 'w' && camera.y> 0) {
             camera.y -= MovementSpeed
-            console.log('camera y',camera.y)
         } else if(event.key === 's' && camera.y < 1500 )  {
             camera.y += MovementSpeed
-            console.log('camera y',camera.y)
         }   
         if(event.key === 'd' && camera.x < 1500) {
             camera.x += MovementSpeed
-            console.log('camera x',camera.x)
         } else if(event.key === 'a' && camera.x > 0) {
             camera.x -= MovementSpeed
-            console.log('camera x',camera.x)
          }
+
+         if(event.key === 'o' && zoom > 0.5){
+            zoom-=0.1
+            Tile_Size = originalTileSize*zoom;
+         } else if(event.key === 'p' && zoom < 1) {
+            zoom +=0.1
+            Tile_Size = originalTileSize*zoom;
+         }
+         console.log(zoom)
 });
 
 // for placement of tiles (in the future)
@@ -877,6 +876,7 @@ function searchForBestSeed(maxSeed = 66536) {
     let mostWater = 0;
 
     for (let seed = 0; seed <= maxSeed; seed++) {
+        console.clear();
         generateMap(seed); 
 
         let grassCount = 0;
@@ -914,8 +914,26 @@ function searchForBestSeed(maxSeed = 66536) {
     console.log(`Best water seed: ${bestSeedWater} (${mostWater} tiles)`);
 }
 
+function countTiles(seed){
+      generateMap(seed); 
+      var grassCount = 0;
+      var sandCount = 0;
+      var waterCount = 0;
+      for (let y = 0; y < Tiles.length; y++) {
+            for (let x = 0; x < Tiles[y].length; x++) {
+                const tileType = getTile(x,y).type;
+
+                if (tileType === 'grass') grassCount++;
+                else if (tileType === 'sand') sandCount++;
+                else if (tileType === 'water') waterCount++;
+            }
+        }
+        console.log(grassCount,sandCount, waterCount)
+        return ;
+}
+
 const coolSeeds = {
-    wetlands: 5493,
-    desert: 15899,
-    grassland: 41631,
+    wetlands: 779,
+    desert: 5983,
+    grassland: 21784,
 };
