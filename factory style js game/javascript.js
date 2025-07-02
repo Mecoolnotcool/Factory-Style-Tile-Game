@@ -2,24 +2,24 @@
 //canvas stuff
 let canvas = document.getElementById("Canvas");
 let ctx = canvas.getContext('2d');
-let CanvasWidth = 1000
-let CanvasHeight = 1000
+let CanvasWidth = 1000;
+let CanvasHeight = 1000;
 
 //tile stuff
 let originalTileSize = 50; 
 let scrollP = 1; 
-let Tile_Size = originalTileSize*scrollP 
+let Tile_Size = originalTileSize*scrollP;
 
 //amount of tiles is cols*rows or just x^2 x being either cols or rows bc it is a square
-let cols = 50
-let rows = 50
+let cols = 50;
+let rows = cols;
 
 
-let Tiles = []
+let Tiles = [];
 
-let ItemSelected = null
+let ItemSelected = null;
 
-let angle = 0
+let angle = 0;
 
 let cash = 1000;
 let CashTextBox = document.getElementById('cashText');
@@ -399,7 +399,8 @@ function drawMachine(x,y,machine,degrees){
         ctx.stroke();
     }
 }
-var Max = 100
+
+var Max = 65536
 var Min = 1
 let setseed = Math.floor(Math.random() * (Max - Min + 1)) + Min; //random seed
 function generateMap(inputedSeed) {
@@ -409,9 +410,9 @@ function generateMap(inputedSeed) {
           const scale = 0.15
           console.log('seed is',setseed)
 
-         for (let y = 0; y <cols; y++) {
+         for (let x = 0; x <rows; x++) {
             const row = []
-            for (let x = 0; x <rows; x++) {
+            for (let y = 0; y <cols; y++) {
                  var tx = x*Tile_Size
                  var ty = y*Tile_Size
                  const value = noise.perlin2(x * scale, y * scale);
@@ -559,13 +560,13 @@ function doTransfer(dest,source,Amount) {
 function transferInventorys(Ax,Ay,Bx,By, Amount){
     //if both tiles exist then move on
     if(tileExists(Ax,Ay)&& tileExists(Bx,By)){
-        let Destination = Tiles[By][Bx]
-        let Inputer = Tiles[Ay][Ax]
+        let Destination = getTile(Bx,By)
+        let Inputer = getTile(Ax,Ay)
 
         let inventory2State = Inputer.inventory2.active
 
         let SpecificType = false
-
+        
         if(containers[Destination.machine]) {
             SpecificType = containers[Destination.machine].TypeInputed ?? false;
         }
@@ -573,7 +574,6 @@ function transferInventorys(Ax,Ay,Bx,By, Amount){
         //if there is no input then cancel the function
         if(Destination.input == null) return;
         if(Inputer.output == null) return;
-      
         checkIfTransfer(Amount,Destination,Inputer,inventory2State, SpecificType)
 
     } 
@@ -675,8 +675,6 @@ canvas.addEventListener('mousedown', function(event) {
     let CameraTileX = Math.floor(camera.x / Tile_Size); 
     let CameraTileY = Math.floor(camera.y / Tile_Size)
     
-    console.log('camera x',CameraTileX)
-    console.log('camera y',CameraTileY)
     
     const tileX = Math.floor((mouseX / Tile_Size) + CameraTileX); //Calculate the tile position based on the mouse position and camera offset
     const tileY = Math.floor((mouseY /Tile_Size) + CameraTileY); //Calculate the tile position based on the mouse position and camera offset
@@ -880,7 +878,7 @@ function shop(){
 //This is not used in the game but can be used to find the best seed for a specific type of tile
 //Checks through 2^16 seeds which is 65536 seeds and at the moment it is the maximum seed value
 //It will log the best seed for grass, sand and water
-function searchForBestSeed(maxSeed = 100) {
+function searchForBestSeed(maxSeed = 66536) {
     let bestSeedGrass = 0;
     let bestSeedSand = 0;
     let bestSeedWater = 0;
@@ -935,6 +933,3 @@ const coolSeeds = {
 };
 
 shop(); // Initialize the shop when the script loads
-
-
-
