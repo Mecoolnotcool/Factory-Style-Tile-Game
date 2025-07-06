@@ -1,3 +1,5 @@
+const GameVersion = 0.1
+
 //canvas stuff
 let canvas = document.getElementById("Canvas");
 let ctx = canvas.getContext('2d');
@@ -5,12 +7,9 @@ let CanvasWidth = 1000;
 let CanvasHeight = 1000;
 
 //tile stuff
-let originalTileSize = 50; 
+const originalTileSize = 50; 
 let zoom = 1; 
 let Tile_Size = originalTileSize*zoom;
-let MinTileSize = 20
-
-const GameVersion = 0.1
 
 //amount of tiles is cols*rows or just x^2 x being either cols or rows bc it is a square
 let cols = 50;
@@ -495,10 +494,10 @@ function AdjacentTiles(x,y) {
     let TilesNearby = [];
 
     TilesNearby.push({
-        'left':{X:x-Tile_Size,Y:y},
-        'right':{X:x+Tile_Size,Y:y},
-        'bottom':{X:x,Y:y-Tile_Size},
-        'top':{X:x,Y:y+Tile_Size}
+        'left':{X:x-originalTileSize,Y:y},
+        'right':{X:x+originalTileSize,Y:y},
+        'bottom':{X:x,Y:y-originalTileSize},
+        'top':{X:x,Y:y+originalTileSize}
     });
 
     return TilesNearby;
@@ -737,6 +736,7 @@ canvas.addEventListener('mousedown', function(event) {
 });
 
 let LastTime = performance.now();
+var errorCode1 = false
 function tick(currentTime) {
     let deltatime = (currentTime - LastTime) / 1000; //delta time meaning most accurate time
     LastTime = currentTime;
@@ -770,13 +770,19 @@ function tick(currentTime) {
             if(Tile.output != null) {
                 var opposite = opposites[Tile.output]
                 const NearbyTiles = AdjacentTiles(Tile.x,Tile.y)
-                var dy= Math.floor(NearbyTiles[0][opposite].Y/Tile_Size) //Convert to tile coords
-                var dx = Math.floor(NearbyTiles[0][opposite].X/Tile_Size)
+                var dy= Math.floor(NearbyTiles[0][opposite].Y/originalTileSize) //Convert to tile coords
+                var dx = Math.floor(NearbyTiles[0][opposite].X/originalTileSize)
                 if(NearbyTiles[0][opposite] && tileExists(dx,dy)){
-                    transferInventorys(Math.floor(Tile.x/Tile_Size),Math.floor(Tile.y/Tile_Size),dx,dy,1)
+                    transferInventorys(Math.floor(Tile.x/originalTileSize),Math.floor(Tile.y/originalTileSize),dx,dy,1)
                 } else{
-                    // forbidden error i accutalty do know what can cause it and its if its looking for a pixel out of range meaning not on the screen
-                    
+                    // forbidden error i  do know what can cause it and its if its looking for a pixel out of range meaning not on the screen
+                    //New error reason is if you're fully zoomed out, dont know why this happens though.
+                    if(errorCode1 == false) {
+                        console.warn('forbiden error')
+                        errorCode1 = true
+                        return
+                    }
+                }
 
             }
         }
@@ -838,7 +844,7 @@ function DownloadData() {
     const a = document.createElement('a');
     a.href = url;
     const date = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-    a.download = 'save_${date}.json'; // Set the desired filename
+    a.download = `save_${date}.json`; // use backticks for template literal
 
     // Programmatically click the anchor to trigger the download
     a.click();
