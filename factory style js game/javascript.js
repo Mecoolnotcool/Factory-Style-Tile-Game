@@ -1,4 +1,3 @@
-
 //canvas stuff
 let canvas = document.getElementById("Canvas");
 let ctx = canvas.getContext('2d');
@@ -10,6 +9,8 @@ let originalTileSize = 50;
 let zoom = 1; 
 let Tile_Size = originalTileSize*zoom;
 let MinTileSize = 20
+
+const GameVersion = 0.1
 
 //amount of tiles is cols*rows or just x^2 x being either cols or rows bc it is a square
 let cols = 50;
@@ -401,10 +402,10 @@ function drawMachine(x,y,machine,degrees){
 
 var Max = 65536
 var Min = 1
-let setseed = Math.floor(Math.random() * (Max - Min + 1)) + Min; //random seed
+let setseed;
 function generateMap(inputedSeed) {
         Tiles = [] 
-          if (inputedSeed != null ||inputedSeed != undefined ) setseed = inputedSeed; 
+          if (inputedSeed != null ||inputedSeed != undefined ) setseed = inputedSeed; else setseed =  Math.floor(Math.random() * (Max - Min + 1)) + Min; //random seed
           noise.seed(setseed); 
           const scale = 0.15
           console.log('seed is',setseed)
@@ -523,6 +524,7 @@ function craft(){
      return; //this is not used yet but will be used in the future
 }
 
+
 //turns one item into another
 function process(Currentmachine,inv) {
     if (Currentmachine.inventory2.active == false) return;
@@ -608,8 +610,24 @@ function checkIfTransfer(Amount, Destination, Inputer, AltInventory, specific){
    
 }
 
+let maxBorderV = 1500 * zoom
+let maxBorderH = 1500 * zoom
+
+function fixCameraPos(z = zoom) {
+     maxBorderV = 1500 * z
+     maxBorderH = 1500 * z
+     return
+}
+
+function optimizeTileLoading() {
+    //This does not do shit bro rlly thought :)
+    return;
+}
+
 //Keyboard controls
 document.addEventListener('keydown', function(event) {
+   
+
         if(event.key === 'r' || event.key === 'R') {
                 if(ItemSelected){
                     if(angle != 360){
@@ -619,10 +637,10 @@ document.addEventListener('keydown', function(event) {
         }
         if(event.key === 'w' && camera.y> 0) {
             camera.y -= MovementSpeed
-        } else if(event.key === 's' && camera.y < 1500 )  {
+        } else if(event.key === 's' && camera.y < maxBorderH )  {
             camera.y += MovementSpeed
         }   
-        if(event.key === 'd' && camera.x < 1500) {
+        if(event.key === 'd' && camera.x < maxBorderV) {
             camera.x += MovementSpeed
         } else if(event.key === 'a' && camera.x > 0) {
             camera.x -= MovementSpeed
@@ -631,11 +649,12 @@ document.addEventListener('keydown', function(event) {
          if(event.key === 'o' && zoom > 0.5){
             zoom-=0.1
             Tile_Size = originalTileSize*zoom;
-         } else if(event.key === 'p' && zoom < 1) {
+            fixCameraPos(zoom)
+         } else if(event.key === 'p' && zoom < 1 && zoom != 0.4) {
             zoom +=0.1
             Tile_Size = originalTileSize*zoom;
+            fixCameraPos(zoom)
          }
-         console.log(zoom)
 });
 
 // for placement of tiles (in the future)
@@ -757,8 +776,7 @@ function tick(currentTime) {
                     transferInventorys(Math.floor(Tile.x/Tile_Size),Math.floor(Tile.y/Tile_Size),dx,dy,1)
                 } else{
                     // forbidden error i accutalty do know what can cause it and its if its looking for a pixel out of range meaning not on the screen
-                    console.warn('i dont know what fucking error to put here but something went wrong')
-                }
+                    
 
             }
         }
@@ -779,12 +797,13 @@ function tick(currentTime) {
     requestAnimationFrame(tick)
 }
 
+requestAnimationFrame(tick)
+
 preloadImages(TilesWithImages, () => {
     console.log("All images loaded.");
     Init(); 
 });
 
-requestAnimationFrame(tick)
 
 function setCutstomSeed() {
     let input = prompt('Input a seed for the map generation')
@@ -799,12 +818,36 @@ function setCutstomSeed() {
 function saveData() {
     localStorage.clear()
     var data = {
-        TileData :  JSON.stringify(Tiles),
+        TileData :  Tiles,
         CashData : cash
     }
     localStorage.setItem('gameData', JSON.stringify(data));
     confirm('saved current data')
 }
+
+function DownloadData() {
+     var data = {
+        version:GameVersion,
+        TileData :  Tiles,
+        CashData : cash
+    }
+    
+
+    const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const date = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    a.download = 'save_${date}.json'; // Set the desired filename
+
+    // Programmatically click the anchor to trigger the download
+    a.click();
+
+    // Revoke the object URL to free up resources
+    URL.revokeObjectURL(url);
+    confirm('downloaded data.json')
+} 
+
 
 function loadData(InputedData) {
     if(InputedData != null) return;
@@ -816,7 +859,7 @@ function loadData(InputedData) {
         data = JSON.parse(localStorage.getItem('gameData'))
         
         cash = data.CashData
-        Tiles = JSON.parse(data.TileData)
+        Tiles = data.TileData
         
     }
 }
