@@ -1,17 +1,19 @@
-button { 
-    color:rgb(74, 74, 74); 
-    background-color:rgb(208, 156, 105); 
-    border:1px solid; 
-    display:inline-blocks;
-    height: 50px; 
-    line-height: 10px; 
-    width: 50px;
-    text-overflow: ellipsis;
-    border-color: rgb(0, 0, 0);
+button {
+  width: 120px; /* fixed size */
+  padding: 10px;
+  font-size: clamp(10px, 1.5vw, 14px); /* adjusts based on viewport */
+  white-space: normal; /* allow wrapping */
+  word-break: break-word; /* break long words if needed */
 }
 body {
     background-color: gray;
     display: flex;
     flex-direction: column;
     align-items: center;  
+    text-align: center;
+}
+.cashText {
+    font-size: 20px;
+    color: white;
+    margin-top: 20px;
 }
