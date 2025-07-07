@@ -920,7 +920,7 @@ function loadData(InputedData) {
         
         cash = data.CashData
         Tiles = data.TileData
-        alert('The save files version is ' + data.version + ' and the current game version is ' + GameVersion + '. If you experience any issues please report them to the developer via github.')
+        alert('The save files version is ' + data.version + ' and the current game version is ' + GameVersion + '. If you experience any issues please report via github.')
         
     }
 }
@@ -933,21 +933,11 @@ let TileFramework = {x: 0,y: 0,type: null, inventory:{amount:0,item:null},timer:
 
 //add more checks errors could happen
 function loadDataFromFile(RawData){
-    let index;
-    //helper function
-    function lookThroughCombined(x,y,combined_Data){
-        for (let i=0;i < combined_Data.length; i++){
-            if(combined_Data[i].x == x && combined_Data[i].y == y ) {
-                index = 0
-                console.log(index)
-            } else {
-                index = null
-            }
-        }
-        index
-    }
     Tiles = []
     let UsableData = JSON.parse(RawData)
+    cash = UsableData.CashData
+    alert('The save files version is ' + data.version + ' and the current game version is ' + GameVersion + '. If you experience any issues please report via github.')
+
     
     //Tile map goes left right
     const mapArray = UsableData.TileMap.split(',').map(Number);
@@ -980,24 +970,24 @@ function loadDataFromFile(RawData){
     // console.log(TileMapNames)
     // console.log(UsableData.TileMapProperties)
 
-    //The Draw function need all the data for this 
+    //The combines all the tile data into the the tile array
      for (let x = 0; x <rows; x++) {
             const row = []
             for (let y = 0; y <cols; y++) {
                 var tx = x*originalTileSize
                 var ty = y*originalTileSize
-                lookThroughCombined(tx,ty,combinedData)
-                if(index != null) {
-                    row.push(combinedData[index])
-                } else{
-                   var TileType = TileMapNames[y][x]
-                   row.push({x: tx,y: ty,type: TileType, inventory:{amount:0,item:null},timer:0,output:null,input:null,degrees:0,machine:null, inventory2 :{active:false,item:null,amount:null}});
-                }
+                for (let i=0;i < combinedData.length; i++){
+                    if(combinedData[i].x == tx && combinedData[i].y == ty ) {
+                        row.push(combinedData[i])
+                    } 
+                } 
+                var TileType = TileMapNames[y][x]
+                row.push({x: tx,y: ty,type: TileType, inventory:{amount:0,item:null},timer:0,output:null,input:null,degrees:0,machine:null, inventory2 :{active:false,item:null,amount:null}});
+                
             }
             Tiles.push(row)
     }
-  
-//    return
+    return
 }
 
 
