@@ -630,8 +630,6 @@ function optimizeTileLoading() {
 
 //Keyboard controls
 document.addEventListener('keydown', function(event) {
-   
-
         if(event.key === 'r' || event.key === 'R') {
                 if(ItemSelected){
                     if(angle != 360){
@@ -750,6 +748,7 @@ function tick(currentTime) {
     for (let y = 0; y < Tiles.length; y++) {
         for (let x = 0; x < Tiles[y].length; x++) {
             var Tile = getTile(x,y)
+            if(Tile.machine == null) break;
             if(MachineInstructions[Tile.machine] != undefined){
                 if(MachineInstructions[Tile.machine].RecipeMachine == false){
                     Tile.timer = (Tile.timer || 0) + deltatime;
@@ -926,37 +925,56 @@ function loadData(InputedData) {
     }
 }
 
+
+
 //basic tile framework
 //x: tx,y: ty,type: TileType, inventory:{amount:0,item:null},timer:0,output:null,input:null,degrees:0,machine:null, inventory2 :{active:false,item:null,amount:null}
+let TileFramework = {x: 0,y: 0,type: null, inventory:{amount:0,item:null},timer:0,output:null,input:null,degrees:0,machine:null, inventory2 :{active:false,item:null,amount:null}}
 
+//add more checks errors could happen
 function loadDataFromFile(RawData){
+    let index;
+    //helper function
+    function lookThroughCombined(x,y,combined_Data){
+        for (let i=0;i < combined_Data.length; i++){
+            if(combined_Data[i].x == x && combined_Data[i].y == y ) {
+                index = 0
+                console.log(index)
+            } else {
+                index = null
+            }
+        }
+        index
+    }
     Tiles = []
     let UsableData = JSON.parse(RawData)
-
+    
+    //Tile map goes left right
     const mapArray = UsableData.TileMap.split(',').map(Number);
- 
+    
     //2d Array
     let TileMapNames = []
-    for (let x = 0; x <rows*rows; x++) {
-            const row = []
-            for (let y = 0; y <cols*cols; y++) {
-              const index = y * 1000 + x;
-              const char = UsableData.TileMap[index];
-
-              const id = parseInt(char);
-              const tileType = Tile_ReverseIndex[id];
-
-              row.push(tileType);
-            }
-            TileMapNames.push(row)
+    let Num = 0
+    for (let x= 0;x<rows; x++){
+        let row = []
+        for (let y= 0;y<cols; y++){
+            var tx = x*50
+            var ty = y*50
+            row.push(Tile_ReverseIndex[mapArray[Num]])
+            Num+=1
+    
+        }
+        TileMapNames.push(row)
     }
-    console.log(TileMapNames)
+    // console.log(TileMapNames[y][x]) returns the tile type name via coords 
+
    //This combines the properties of a tile with its tile type
    let combinedData = []
    for  (i=0; i < UsableData.TileMapProperties.length; i++) {
         var x = UsableData.TileMapProperties[i].x/originalTileSize
         var y = UsableData.TileMapProperties[i].y/originalTileSize
-        console.log(TileMapNames[x][y])
+        UsableData.TileMapProperties[i].type = TileMapNames[y][x]
+        combinedData.push(UsableData.TileMapProperties[i])
    }
 
     // console.log(TileMapNames)
@@ -968,14 +986,18 @@ function loadDataFromFile(RawData){
             for (let y = 0; y <cols; y++) {
                 var tx = x*originalTileSize
                 var ty = y*originalTileSize
-                var TileType = 'grass'
-                row.push({x: tx,y: ty,type: TileType, inventory:{amount:0,item:null},timer:0,output:null,input:null,degrees:0,machine:null, inventory2 :{active:false,item:null,amount:null}});
-                drawTile(tx,ty,TileType)
+                lookThroughCombined(tx,ty,combinedData)
+                if(index != null) {
+                    row.push(combinedData[index])
+                } else{
+                   var TileType = TileMapNames[y][x]
+                   row.push({x: tx,y: ty,type: TileType, inventory:{amount:0,item:null},timer:0,output:null,input:null,degrees:0,machine:null, inventory2 :{active:false,item:null,amount:null}});
+                }
             }
             Tiles.push(row)
     }
   
-   return
+//    return
 }
 
 
