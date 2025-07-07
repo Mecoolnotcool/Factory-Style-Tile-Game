@@ -936,9 +936,8 @@ function loadDataFromFile(RawData){
     Tiles = []
     let UsableData = JSON.parse(RawData)
     cash = UsableData.CashData
-    alert('The save files version is ' + data.version + ' and the current game version is ' + GameVersion + '. If you experience any issues please report via github.')
+    alert('The save files version is ' + UsableData.version + ' and the current game version is ' + GameVersion + '. If you experience any issues please report via github.')
 
-    
     //Tile map goes left right
     const mapArray = UsableData.TileMap.split(',').map(Number);
     
@@ -992,9 +991,11 @@ function loadDataFromFile(RawData){
 
 
 let DataFileInput =  document.getElementById('DataLoader')
+let timesLoadedFile = 0
 
 DataFileInput.addEventListener('change', (event) => {
-    const file = event.target.files[0]; 
+    
+    const file = event.target.files[timesLoadedFile]; 
     if (file) {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -1004,6 +1005,7 @@ DataFileInput.addEventListener('change', (event) => {
             console.error('Error reading file:', e.target.error);
         };
       reader.readAsText(file); 
+      timesLoadedFile++;
     }
 });
 
