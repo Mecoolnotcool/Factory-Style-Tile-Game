@@ -25,6 +25,11 @@ let angle = 0;
 let cash = 1000;
 let CashTextBox = document.getElementById('cashText');
 
+//All The Tile Types
+//These are used to get the index of the tile type for saving/loading
+let Tile_Index = {'void':0,'grass':1,'water':2,'sand':3,'dirt':4}
+let Tile_ReverseIndex = {0: "void", 1: "grass",2: "water",3: "sand", 4:'dirt'};
+
 //Shop items
 const ShopItems = [
     {
@@ -412,8 +417,8 @@ function generateMap(inputedSeed) {
          for (let x = 0; x <rows; x++) {
             const row = []
             for (let y = 0; y <cols; y++) {
-                 var tx = x*Tile_Size
-                 var ty = y*Tile_Size
+                 var tx = x*originalTileSize
+                 var ty = y*originalTileSize
                  const value = noise.perlin2(x * scale, y * scale);
                  const normalized = (value + 1) / 2; // convert from [-1,1] to [0,1]
 
@@ -821,9 +826,61 @@ function setCutstomSeed() {
     }
 }
 
+Tile_Index = {'void':0,'grass':1,'water':2,'sand':3,'dirt':4}
+Tile_ReverseIndex = {0: "void", 1: "grass",2: "water",3: "sand", 4:'dirt'};
+
+let PropertiesIndex = {'x':0,'y':1,'timer':3,'degrees':4,'machine':5}
+
+
+function CompressTileData(data) {
+    let compressedData;
+    // how to compress the data
+    //We will seperate the tile type and their properties
+    //For properties we will skip all the non important stuff
+    let CompressedTileTypesString = '';
+    for (let y = 0; y < Tiles.length; y++) {
+        for (let x = 0; x < Tiles[y].length; x++) {
+            const tileType = getTile(x,y).type;
+            if (tileType in Tile_Index){
+                CompressedTileTypesString += Tile_Index[tileType] + ',' 
+            } else  CompressedTileTypesString += 0 + ',' 
+        }
+    }
+    let CompressedTileProperties = []
+    for (let y = 0; y < Tiles.length; y++) {
+        for (let x = 0; x < Tiles[y].length; x++) {
+            const tile = getTile(x,y);
+            const TileWithImportantData = tile.machine != null 
+            if(TileWithImportantData){
+                CompressedTileProperties.push({
+                    x:tile.x,
+                    y:tile.y,
+                    inventory: tile.inventory,
+                    inventory2: tile.inventory2,
+                    machine: tile.machine,
+                    timer: tile.timer,
+                    output: tile.output,
+                    input: tile.input,
+                    degrees: tile.degrees
+                })
+            }
+        }
+    }
+
+    compressedData = {
+        version:data.version,
+        CashData:data.CashData,
+        TileMap:CompressedTileTypesString,
+        TileMapProperties:CompressedTileProperties,
+    }
+    console.log(compressedData)
+    return  JSON.stringify(compressedData)
+}
+
 function saveData() {
     localStorage.clear()
     var data = {
+        version:GameVersion,
         TileData :  Tiles,
         CashData : cash
     }
@@ -837,14 +894,13 @@ function DownloadData() {
         TileData :  Tiles,
         CashData : cash
     }
-    
-
-    const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+    var compressed = CompressTileData(data)
+    const blob = new Blob([compressed], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     const date = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-    a.download = `save_${date}.json`; // use backticks for template literal
+    a.download = `save_${date}_${GameVersion}.json`; // use backticks for template literal
 
     // Programmatically click the anchor to trigger the download
     a.click();
@@ -853,7 +909,6 @@ function DownloadData() {
     URL.revokeObjectURL(url);
     confirm('downloaded data.json')
 } 
-
 
 function loadData(InputedData) {
     if(InputedData != null) return;
@@ -866,9 +921,79 @@ function loadData(InputedData) {
         
         cash = data.CashData
         Tiles = data.TileData
+        alert('The save files version is ' + data.version + ' and the current game version is ' + GameVersion + '. If you experience any issues please report them to the developer via github.')
         
     }
 }
+
+//basic tile framework
+//x: tx,y: ty,type: TileType, inventory:{amount:0,item:null},timer:0,output:null,input:null,degrees:0,machine:null, inventory2 :{active:false,item:null,amount:null}
+
+function loadDataFromFile(RawData){
+    Tiles = []
+    let UsableData = JSON.parse(RawData)
+
+    const mapArray = UsableData.TileMap.split(',').map(Number);
+ 
+    //2d Array
+    let TileMapNames = []
+    for (let x = 0; x <rows*rows; x++) {
+            const row = []
+            for (let y = 0; y <cols*cols; y++) {
+              const index = y * 1000 + x;
+              const char = UsableData.TileMap[index];
+
+              const id = parseInt(char);
+              const tileType = Tile_ReverseIndex[id];
+
+              row.push(tileType);
+            }
+            TileMapNames.push(row)
+    }
+    console.log(TileMapNames)
+   //This combines the properties of a tile with its tile type
+   let combinedData = []
+   for  (i=0; i < UsableData.TileMapProperties.length; i++) {
+        var x = UsableData.TileMapProperties[i].x/originalTileSize
+        var y = UsableData.TileMapProperties[i].y/originalTileSize
+        console.log(TileMapNames[x][y])
+   }
+
+    // console.log(TileMapNames)
+    // console.log(UsableData.TileMapProperties)
+
+    //The Draw function need all the data for this 
+     for (let x = 0; x <rows; x++) {
+            const row = []
+            for (let y = 0; y <cols; y++) {
+                var tx = x*originalTileSize
+                var ty = y*originalTileSize
+                var TileType = 'grass'
+                row.push({x: tx,y: ty,type: TileType, inventory:{amount:0,item:null},timer:0,output:null,input:null,degrees:0,machine:null, inventory2 :{active:false,item:null,amount:null}});
+                drawTile(tx,ty,TileType)
+            }
+            Tiles.push(row)
+    }
+  
+   return
+}
+
+
+let DataFileInput =  document.getElementById('DataLoader')
+
+DataFileInput.addEventListener('change', (event) => {
+    const file = event.target.files[0]; 
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+           loadDataFromFile(e.target.result)
+        };
+        reader.onerror = (e) => {
+            console.error('Error reading file:', e.target.error);
+        };
+      reader.readAsText(file); 
+    }
+});
 
 function buyItem(itemName) {
    if (!itemName) {
@@ -986,3 +1111,12 @@ const coolSeeds = {
     desert: 5983,
     grassland: 21784,
 };
+
+//GitHub link for issues and suggestions
+//Feel free to report any bugs or suggest new features
+console.log('---------------------------------------------------')
+console.log('GitHub link for issues and suggestions')
+console.log('Feel free to report any bugs or suggest new features')
+console.log('https://github.com/Mecoolnotcool/factory/issues')
+console.error('the load file function does NOT work!!')
+console.log('---------------------------------------------------')
