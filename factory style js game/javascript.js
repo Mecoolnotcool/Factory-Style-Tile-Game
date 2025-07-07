@@ -510,6 +510,7 @@ function AdjacentTiles(x,y) {
 
 function getTile(x, y) {
     return Tiles[x][y]
+
 }
 
 function sellMachine(Tile) {
@@ -747,8 +748,8 @@ function tick(currentTime) {
     
     for (let y = 0; y < Tiles.length; y++) {
         for (let x = 0; x < Tiles[y].length; x++) {
-            var Tile = getTile(x,y)
-            if(Tile.machine == null) break;
+             
+            var Tile = getTile(x,y) 
             if(MachineInstructions[Tile.machine] != undefined){
                 if(MachineInstructions[Tile.machine].RecipeMachine == false){
                     Tile.timer = (Tile.timer || 0) + deltatime;
@@ -848,6 +849,7 @@ function CompressTileData(data) {
     let CompressedTileProperties = []
     for (let y = 0; y < Tiles.length; y++) {
         for (let x = 0; x < Tiles[y].length; x++) {
+            //get Tile breaks
             const tile = getTile(x,y);
             const TileWithImportantData = tile.machine != null 
             if(TileWithImportantData){
@@ -925,11 +927,8 @@ function loadData(InputedData) {
     }
 }
 
-
-
 //basic tile framework
 //x: tx,y: ty,type: TileType, inventory:{amount:0,item:null},timer:0,output:null,input:null,degrees:0,machine:null, inventory2 :{active:false,item:null,amount:null}
-let TileFramework = {x: 0,y: 0,type: null, inventory:{amount:0,item:null},timer:0,output:null,input:null,degrees:0,machine:null, inventory2 :{active:false,item:null,amount:null}}
 
 //add more checks errors could happen
 function loadDataFromFile(RawData){
@@ -966,26 +965,37 @@ function loadDataFromFile(RawData){
         combinedData.push(UsableData.TileMapProperties[i])
    }
 
-    // console.log(TileMapNames)
-    // console.log(UsableData.TileMapProperties)
 
-    //The combines all the tile data into the the tile array
+    //This combines all the tile data into the the tile array
      for (let x = 0; x <rows; x++) {
             const row = []
             for (let y = 0; y <cols; y++) {
                 var tx = x*originalTileSize
                 var ty = y*originalTileSize
-                for (let i=0;i < combinedData.length; i++){
-                    if(combinedData[i].x == tx && combinedData[i].y == ty ) {
-                        row.push(combinedData[i])
-                    } 
-                } 
-                var TileType = TileMapNames[y][x]
-                row.push({x: tx,y: ty,type: TileType, inventory:{amount:0,item:null},timer:0,output:null,input:null,degrees:0,machine:null, inventory2 :{active:false,item:null,amount:null}});
+           
+                var TileType = TileMapNames[y][x];
+                row.push({
+                    x: tx, y: ty, type: TileType,
+                    inventory: { amount: 0, item: null },
+                    timer: 0, output: null, input: null, degrees: 0, machine: null,
+                    inventory2: { active: false, item: null, amount: null }
+                });
+                
                 
             }
             Tiles.push(row)
     }
+    for (let x = 0; x <rows; x++) {
+           for (let y = 0; y <cols; y++) {
+            var tx = x*originalTileSize
+            var ty = y*originalTileSize
+                for (let i=0;i < combinedData.length; i++){
+                    if(combinedData[i].x == tx && combinedData[i].y == ty ) {
+                        Tiles[x][y] = combinedData[i]
+                    } 
+                } 
+           }
+     }
     return
 }
 
@@ -1132,5 +1142,6 @@ console.log('---------------------------------------------------')
 console.log('GitHub link for issues and suggestions')
 console.log('Feel free to report any bugs or suggest new features')
 console.log('https://github.com/Mecoolnotcool/factory/issues')
-console.error('the load file function does NOT work!!')
+console.error('Latest Error')
+console.error("Can't load multiple files")
 console.log('---------------------------------------------------')
