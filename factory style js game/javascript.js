@@ -965,7 +965,6 @@ function loadDataFromFile(RawData){
         combinedData.push(UsableData.TileMapProperties[i])
    }
 
-
     //This combines all the tile data into the the tile array
      for (let x = 0; x <rows; x++) {
             const row = []
@@ -979,12 +978,10 @@ function loadDataFromFile(RawData){
                     inventory: { amount: 0, item: null },
                     timer: 0, output: null, input: null, degrees: 0, machine: null,
                     inventory2: { active: false, item: null, amount: null }
-                });
-                
-                
+                });  
             }
             Tiles.push(row)
-    }
+        }
     for (let x = 0; x <rows; x++) {
            for (let y = 0; y <cols; y++) {
             var tx = x*originalTileSize
@@ -998,26 +995,26 @@ function loadDataFromFile(RawData){
      }
     return
 }
-
-
 let DataFileInput =  document.getElementById('DataLoader')
 let timesLoadedFile = 0
 
 DataFileInput.addEventListener('change', (event) => {
-    
-    const file = event.target.files[timesLoadedFile]; 
+    const file = event.target.files[0];  // always grab the first file
     if (file) {
         const reader = new FileReader();
         reader.onload = (e) => {
-           loadDataFromFile(e.target.result)
+            loadDataFromFile(e.target.result);
         };
         reader.onerror = (e) => {
             console.error('Error reading file:', e.target.error);
         };
-      reader.readAsText(file); 
-      timesLoadedFile++;
+        reader.readAsText(file);
     }
+
+    // Clear the input to allow selecting the same file again later
+    event.target.value = '';
 });
+
 
 function buyItem(itemName) {
    if (!itemName) {
@@ -1143,5 +1140,5 @@ console.log('GitHub link for issues and suggestions')
 console.log('Feel free to report any bugs or suggest new features')
 console.log('https://github.com/Mecoolnotcool/factory/issues')
 console.error('Latest Error')
-console.error("Can't load multiple files")
+console.error("No known errors")
 console.log('---------------------------------------------------')
