@@ -404,8 +404,8 @@ function drawMachine(x,y,machine,degrees){
     }
 }
 
-var Max = 65536
-var Min = 1
+let Max = 65536
+let Min = 1
 let setseed;
 function generateMap(inputedSeed) {
         Tiles = [] 
@@ -417,8 +417,8 @@ function generateMap(inputedSeed) {
          for (let x = 0; x <rows; x++) {
             const row = []
             for (let y = 0; y <cols; y++) {
-                 var tx = x*originalTileSize
-                 var ty = y*originalTileSize
+                 let tx = x*originalTileSize
+                 let ty = y*originalTileSize
                  const value = noise.perlin2(x * scale, y * scale);
                  const normalized = (value + 1) / 2; // convert from [-1,1] to [0,1]
 
@@ -581,15 +581,15 @@ function transferInventorys(Ax,Ay,Bx,By, Amount){
 }
 
 function checkIfTransfer(Amount, Destination, Inputer, AltInventory, specific){
-    var DestinationHasAItem = Destination.inventory.item ?? false;
+    let DestinationHasAItem = Destination.inventory.item ?? false;
     //not a container
-    var IsAMachine = MachineInstructions[Destination.machine] ?? false;
-    var MachineWithOutput = false
+    let IsAMachine = MachineInstructions[Destination.machine] ?? false;
+    let MachineWithOutput = false
     if (IsAMachine) {if(MachineInstructions[Destination.machine].HasInput == true) {MachineWithOutput = true;} }
 
 
     //set the inv being used
-    var inv = null;
+    let inv = null;
     if(AltInventory) inv = Inputer.inventory2; else if (AltInventory == false)  inv = Inputer.inventory;
     if (inv == null) return;
    
@@ -740,7 +740,7 @@ canvas.addEventListener('mousedown', function(event) {
 });
 
 let LastTime = performance.now();
-var errorCode1 = false
+let errorCode1 = false
 function tick(currentTime) {
     let deltatime = (currentTime - LastTime) / 1000; //delta time meaning most accurate time
     LastTime = currentTime;
@@ -749,7 +749,7 @@ function tick(currentTime) {
     for (let y = 0; y < Tiles.length; y++) {
         for (let x = 0; x < Tiles[y].length; x++) {
              
-            var Tile = getTile(x,y) 
+            let Tile = getTile(x,y) 
             if(MachineInstructions[Tile.machine] != undefined){
                 if(MachineInstructions[Tile.machine].RecipeMachine == false){
                     Tile.timer = (Tile.timer || 0) + deltatime;
@@ -773,15 +773,14 @@ function tick(currentTime) {
 
             //transfer stuff
             if(Tile.output != null) {
-                var opposite = opposites[Tile.output]
+                let opposite = opposites[Tile.output]
                 const NearbyTiles = AdjacentTiles(Tile.x,Tile.y)
-                var dy= Math.floor(NearbyTiles[0][opposite].Y/originalTileSize) //Convert to tile coords
-                var dx = Math.floor(NearbyTiles[0][opposite].X/originalTileSize)
+                let dy= Math.floor(NearbyTiles[0][opposite].Y/originalTileSize) //Convert to tile coords
+                let dx = Math.floor(NearbyTiles[0][opposite].X/originalTileSize)
                 if(NearbyTiles[0][opposite] && tileExists(dx,dy)){
                     transferInventorys(Math.floor(Tile.x/originalTileSize),Math.floor(Tile.y/originalTileSize),dx,dy,1)
                 } else{
                     // forbidden error i  do know what can cause it and its if its looking for a pixel out of range meaning not on the screen
-                    //New error reason is if you're fully zoomed out, dont know why this happens though.
                     if(errorCode1 == false) {
                         console.warn('forbiden error')
                         errorCode1 = true
@@ -880,7 +879,7 @@ function CompressTileData(data) {
 
 function saveData() {
     localStorage.clear()
-    var data = {
+    let data = {
         version:GameVersion,
         TileData :  Tiles,
         CashData : cash
@@ -890,12 +889,12 @@ function saveData() {
 }
 
 function DownloadData() {
-     var data = {
+     let data = {
         version:GameVersion,
         TileData :  Tiles,
         CashData : cash
     }
-    var compressed = CompressTileData(data)
+    let compressed = CompressTileData(data)
     const blob = new Blob([compressed], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -913,7 +912,7 @@ function DownloadData() {
 
 function loadData(InputedData) {
     if(InputedData != null) return;
-    var data;
+    let data;
      if(localStorage.getItem('gameData') === null ) {
            return
     } else {
@@ -946,8 +945,8 @@ function loadDataFromFile(RawData){
     for (let x= 0;x<rows; x++){
         let row = []
         for (let y= 0;y<cols; y++){
-            var tx = x*50
-            var ty = y*50
+            let tx = x*originalTileSize
+            let ty = y*originalTileSize
             row.push(Tile_ReverseIndex[mapArray[Num]])
             Num+=1
     
@@ -959,8 +958,8 @@ function loadDataFromFile(RawData){
    //This combines the properties of a tile with its tile type
    let combinedData = []
    for  (i=0; i < UsableData.TileMapProperties.length; i++) {
-        var x = UsableData.TileMapProperties[i].x/originalTileSize
-        var y = UsableData.TileMapProperties[i].y/originalTileSize
+        let x = UsableData.TileMapProperties[i].x/originalTileSize
+        let y = UsableData.TileMapProperties[i].y/originalTileSize
         UsableData.TileMapProperties[i].type = TileMapNames[y][x]
         combinedData.push(UsableData.TileMapProperties[i])
    }
@@ -969,10 +968,10 @@ function loadDataFromFile(RawData){
      for (let x = 0; x <rows; x++) {
             const row = []
             for (let y = 0; y <cols; y++) {
-                var tx = x*originalTileSize
-                var ty = y*originalTileSize
+                let tx = x*originalTileSize
+                let ty = y*originalTileSize
            
-                var TileType = TileMapNames[y][x];
+                let TileType = TileMapNames[y][x];
                 row.push({
                     x: tx, y: ty, type: TileType,
                     inventory: { amount: 0, item: null },
@@ -984,8 +983,8 @@ function loadDataFromFile(RawData){
         }
     for (let x = 0; x <rows; x++) {
            for (let y = 0; y <cols; y++) {
-            var tx = x*originalTileSize
-            var ty = y*originalTileSize
+            let tx = x*originalTileSize
+            let ty = y*originalTileSize
                 for (let i=0;i < combinedData.length; i++){
                     if(combinedData[i].x == tx && combinedData[i].y == ty ) {
                         Tiles[x][y] = combinedData[i]
@@ -1111,9 +1110,9 @@ function searchForBestSeed(maxSeed = 66536) {
 
 function countTiles(seed){
       generateMap(seed); 
-      var grassCount = 0;
-      var sandCount = 0;
-      var waterCount = 0;
+      let grassCount = 0;
+      let sandCount = 0;
+      let waterCount = 0;
       for (let y = 0; y < Tiles.length; y++) {
             for (let x = 0; x < Tiles[y].length; x++) {
                 const tileType = getTile(x,y).type;
