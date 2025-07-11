@@ -1126,6 +1126,16 @@ function countTiles(seed){
         return ;
 }
 
+function resizeCanvas(){
+  const w =  window.innerWidth - 250
+  const h =  window.innerHeight - 250
+  canvas.width =  w
+  canvas.height = h
+  
+  CanvasHeight = h
+  CanvasWidth = w
+}
+
 const coolSeeds = {
     wetlands: 779,
     desert: 5983,
