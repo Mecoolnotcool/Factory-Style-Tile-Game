@@ -17,7 +17,7 @@ let Tile_Size = originalTileSize*zoom;
 //amount of tiles is cols*rows or just x^2 x being either cols or rows bc it is a square
 let cols = 75;
 let rows = cols;
-let MovementSpeed = 50;
+let MovementSpeed = 100;
 
 let Tiles = [];
 
@@ -338,7 +338,7 @@ for (const name of TilesWithImages) {
         Images[name] = img;
 }
 
-
+//functions
 function preloadImages(names, onComplete) {
     let loaded = 0;
     const total = names.length;
@@ -366,7 +366,6 @@ function preloadImages(names, onComplete) {
     }
 }
 
-//functions
 function drawTile(x,y,type,degrees){
     if(typeof x !== 'number' || typeof y !== 'number' || typeof Tile_Size !== 'number') {
         console.log('failed to draw a tile, number values not provided')
@@ -570,7 +569,6 @@ function doTransfer(dest,source,Amount) {
 }
 
 function transferInventorys(Ax,Ay,Bx,By, Amount){
-    //if both tiles exist then move on
     if(tileExists(Ax,Ay)&& tileExists(Bx,By)){
         let Destination = getTile(Bx,By)
         let Inputer = getTile(Ax,Ay)
@@ -583,7 +581,6 @@ function transferInventorys(Ax,Ay,Bx,By, Amount){
             SpecificType = containers[Destination.machine].TypeInputed ?? false;
         }
 
-        //if there is no input then cancel the function
         if(Destination.input == null) return;
         if(Inputer.output == null) return;
         checkIfTransfer(Amount,Destination,Inputer,inventory2State, SpecificType)
@@ -674,7 +671,7 @@ document.addEventListener('keydown', function(event) {
 let HoveredTileX = null
 let HoveredTileY = null
 canvas.addEventListener('mousemove',function(event) {
-    let rect = canvas.getBoundingClientRect() //This has to be done bc sometimes the canvas is in the middle other times not so we adjust it
+    let rect = canvas.getBoundingClientRect() 
     let mouseX = event.clientX - rect.left;
     let mouseY = event.clientY - rect.top;
 
@@ -689,7 +686,7 @@ canvas.addEventListener('mousemove',function(event) {
 
 //detects clicking on tile
 canvas.addEventListener('mousedown', function(event) {
-    const rect = canvas.getBoundingClientRect() //This has to be done bc sometimes the canvas is in the middle other times not so we adjust it
+    const rect = canvas.getBoundingClientRect() 
     const mouseX = event.clientX - rect.left
     const mouseY = event.clientY - rect.top
 
@@ -1126,11 +1123,18 @@ function countTiles(seed){
         return ;
 }
 
-
+    /*Notes
+    Breaks because of canvas size (numbers like 1007 doesnt work but 1000 does)
+    Breaks because of camera position
+    Only the canvas size of 1000 width works
+    */
 function resizeCanvas(w,h){
-  if (window.innerHeight > maxCanvasHeight) h = maxCanvasHeight; else h = window.innerHeight;
-  if (window.innerWidth > maxCanvasWidth) w = maxCanvasWidth; else w = window.innerWidth;
+    alert("Warning this feature is experimental and may break the game")
+    // if (window.innerHeight > maxCanvasHeight) h = maxCanvasHeight; else h = window.innerHeight;
+    if (window.innerWidth > maxCanvasWidth) w = maxCanvasWidth; else w = window.innerWidth;
 
+    w= 1007
+    h = 1000
     CanvasHeight = h
     CanvasWidth = w
 
