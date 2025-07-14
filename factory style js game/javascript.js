@@ -1,10 +1,13 @@
-const GameVersion = 0.1
+const GameVersion = 'Alpha 0.1'
 
 //canvas stuff
 let canvas = document.getElementById("Canvas");
 let ctx = canvas.getContext('2d');
-let CanvasWidth = 1000;
-let CanvasHeight = 1000;
+let CanvasWidth = canvas.width;
+let CanvasHeight = canvas.height;
+
+let maxCanvasWidth = 2000
+let maxCanvasHeight = 1000;
 
 //tile stuff
 const originalTileSize = 50; 
@@ -12,7 +15,7 @@ let zoom = 1;
 let Tile_Size = originalTileSize*zoom;
 
 //amount of tiles is cols*rows or just x^2 x being either cols or rows bc it is a square
-let cols = 50;
+let cols = 75;
 let rows = cols;
 let MovementSpeed = 50;
 
@@ -30,7 +33,7 @@ let CashTextBox = document.getElementById('cashText');
 let Tile_Index = {'void':0,'grass':1,'water':2,'sand':3,'dirt':4}
 let Tile_ReverseIndex = {0: "void", 1: "grass",2: "water",3: "sand", 4:'dirt'};
 
-//Shop items
+
 const ShopItems = [
     {
         Name: "test_machine",
@@ -302,6 +305,12 @@ const placementConditions  = {
 
 const tools = ['shovel', 'test', 'bucket'];
 
+const coolSeeds = {
+    wetlands: 779,
+    desert: 5983,
+    grassland: 21784,
+};
+
 
 const TilesWithImages = [
     'grass',
@@ -374,7 +383,7 @@ function drawTile(x,y,type,degrees){
         // ctx.drawImage(img, x, y, Tile_Size, Tile_Size);
     } else{
         ctx.beginPath();
-        ctx.fillStyle = 'grey';
+        ctx.fillStyle = 'black';
         ctx.rect(x, y, Tile_Size, Tile_Size);
         ctx.fill();    
         ctx.stroke();
@@ -425,11 +434,11 @@ function generateMap(inputedSeed) {
                  let TileType 
 
                  if (normalized < 0.35) {
-                    TileType = 'water';   // pond
+                    TileType = 'water';   
                 } else if (normalized < 0.42) {
-                    TileType = 'sand';    // beach
+                    TileType = 'sand';
                 } else{
-                    TileType = 'grass';   // land
+                    TileType = 'grass';  
                 }
                 
                
@@ -446,13 +455,17 @@ function Init(){
     shop();
 }
 
+
+
 let camera = {
   x: 0,
   y: 0  ,
   width: canvas.width,
-  height: canvas.height
+  height: canvas.height,
 };
 
+//From the mozilla tile map tutorial 
+//https://developer.mozilla.org/en-US/docs/Games/Techniques/Tilemaps
 let startCol = Math.floor(camera.x / Tile_Size);
 let endCol = Math.ceil((camera.x + camera.width) / Tile_Size);
 
@@ -530,7 +543,6 @@ function craft(){
 }
 
 
-//turns one item into another
 function process(Currentmachine,inv) {
     if (Currentmachine.inventory2.active == false) return;
     for (let key in recipes) {
@@ -548,7 +560,6 @@ function process(Currentmachine,inv) {
     }
 }
 
-//these are inventories
 function doTransfer(dest,source,Amount) {
     if (source.amount >= Amount  && dest.inventory.amount < containers[dest.machine].MaxInventory ) { 
       dest.inventory.amount+=Amount
@@ -617,7 +628,6 @@ function checkIfTransfer(Amount, Destination, Inputer, AltInventory, specific){
 
 let maxBorderV = 1500 * zoom
 let maxBorderH = 1500 * zoom
-
 function fixCameraPos(z = zoom) {
      maxBorderV = 1500 * z
      maxBorderH = 1500 * z
@@ -809,12 +819,6 @@ function tick(currentTime) {
 
 requestAnimationFrame(tick)
 
-preloadImages(TilesWithImages, () => {
-    console.log("All images loaded.");
-    Init(); 
-});
-
-
 function setCutstomSeed() {
     let input = prompt('Input a seed for the map generation')
     if(input != null) {
@@ -824,9 +828,6 @@ function setCutstomSeed() {
         console.warn('no seed provided')
     }
 }
-
-Tile_Index = {'void':0,'grass':1,'water':2,'sand':3,'dirt':4}
-Tile_ReverseIndex = {0: "void", 1: "grass",2: "water",3: "sand", 4:'dirt'};
 
 let PropertiesIndex = {'x':0,'y':1,'timer':3,'degrees':4,'machine':5}
 
@@ -848,7 +849,6 @@ function CompressTileData(data) {
     let CompressedTileProperties = []
     for (let y = 0; y < Tiles.length; y++) {
         for (let x = 0; x < Tiles[y].length; x++) {
-            //get Tile breaks
             const tile = getTile(x,y);
             const TileWithImportantData = tile.machine != null 
             if(TileWithImportantData){
@@ -884,6 +884,8 @@ function saveData() {
         TileData :  Tiles,
         CashData : cash
     }
+    let a = CompressTileData(data)
+    console.log(a)
     localStorage.setItem('gameData', JSON.stringify(data));
     confirm('saved current data')
 }
@@ -899,8 +901,8 @@ function DownloadData() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    const date = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-    a.download = `save_${date}_${GameVersion}.json`; // use backticks for template literal
+    const date = new Date().toISOString().split('T')[0]; 
+    a.download = `Factory-Style-Js-Game_save_${date}_${GameVersion}.json`; // use backticks for template literal
 
     // Programmatically click the anchor to trigger the download
     a.click();
@@ -925,9 +927,6 @@ function loadData(InputedData) {
         
     }
 }
-
-//basic tile framework
-//x: tx,y: ty,type: TileType, inventory:{amount:0,item:null},timer:0,output:null,input:null,degrees:0,machine:null, inventory2 :{active:false,item:null,amount:null}
 
 //add more checks errors could happen
 function loadDataFromFile(RawData){
@@ -994,6 +993,7 @@ function loadDataFromFile(RawData){
      }
     return
 }
+
 let DataFileInput =  document.getElementById('DataLoader')
 let timesLoadedFile = 0
 
@@ -1126,21 +1126,29 @@ function countTiles(seed){
         return ;
 }
 
-function resizeCanvas(){
-  const w =  window.innerWidth - 250
-  const h =  window.innerHeight - 250
-  canvas.width =  w
-  canvas.height = h
-  
-  CanvasHeight = h
-  CanvasWidth = w
+
+function resizeCanvas(w,h){
+  if (window.innerHeight > maxCanvasHeight) h = maxCanvasHeight; else h = window.innerHeight;
+  if (window.innerWidth > maxCanvasWidth) w = maxCanvasWidth; else w = window.innerWidth;
+
+    CanvasHeight = h
+    CanvasWidth = w
+
+    canvas.width = w
+    canvas.height = h
+
+    camera.width = w
+    camera.height = h   
+
+    ctx.clearRect(0,0,CanvasWidth,CanvasHeight)
+    RenderTiles()
 }
 
-const coolSeeds = {
-    wetlands: 779,
-    desert: 5983,
-    grassland: 21784,
-};
+preloadImages(TilesWithImages, () => {
+    console.log("All images loaded.");
+    Init(); 
+});
+
 
 //GitHub link for issues and suggestions
 //Feel free to report any bugs or suggest new features
@@ -1148,6 +1156,5 @@ console.log('---------------------------------------------------')
 console.log('GitHub link for issues and suggestions')
 console.log('Feel free to report any bugs or suggest new features')
 console.log('https://github.com/Mecoolnotcool/factory/issues')
-console.error('Latest Error')
-console.error("No known errors")
+console.log('New website. May not be up to date. https://mecoolnotcool.github.io./')
 console.log('---------------------------------------------------')
