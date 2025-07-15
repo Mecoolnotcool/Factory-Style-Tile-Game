@@ -678,7 +678,7 @@ canvas.addEventListener('mousemove',function(event) {
     let tileX = Math.floor(mouseX/Tile_Size) 
     let tileY = Math.floor(mouseY/Tile_Size) 
     
-    if (tileX >= 0 && tileX < CanvasWidth / Tile_Size &&tileY >= 0 && tileY < CanvasHeight / Tile_Size) {
+    if (tileX >= 0 &&  tileX < 2000/ Tile_Size &&tileY >= 0 && tileY < 2000 / Tile_Size) {
        HoveredTileX = tileX
        HoveredTileY = tileY
     } 
@@ -690,12 +690,17 @@ canvas.addEventListener('mousedown', function(event) {
     const mouseX = event.clientX - rect.left
     const mouseY = event.clientY - rect.top
 
-    let CameraTileX = Math.floor(camera.x / Tile_Size); 
+    //Offest because of camera position
+    let CameraTileX = Math.floor(camera.x / Tile_Size)
     let CameraTileY = Math.floor(camera.y / Tile_Size)
+
+    console.log(CameraTileX/2,CameraTileX*zoom,CameraTileX,camera.x)
     
-    
-    const tileX = Math.floor((mouseX / Tile_Size) + CameraTileX); //Calculate the tile position based on the mouse position and camera offset
-    const tileY = Math.floor((mouseY /Tile_Size) + CameraTileY); //Calculate the tile position based on the mouse position and camera offset
+    let tileX = HoveredTileX + CameraTileX 
+    let tileY = HoveredTileY + CameraTileY
+
+    // const tileX = Math.floor((mouseX / Tile_Size) + CameraTileX);
+    // const tileY = Math.floor((mouseY /Tile_Size) + CameraTileY);
 
     if (tileExists(tileX, tileY)) {
         if(ItemSelected != null){
@@ -1052,11 +1057,13 @@ function shop(){
     });
 }
 
-//cool function to find the best seed for grass, sand and water and more in the future
-//Does take a while to run so be patient
-//This is not used in the game but can be used to find the best seed for a specific type of tile
-//Checks through 2^16 seeds which is 65536 seeds and at the moment it is the maximum seed value
-//It will log the best seed for grass, sand and water
+/*
+cool function to find the best seed for grass, sand and water and more in the future
+Does take a while to run so be patient
+This is not used in the game but can be used to find the best seed for a specific type of tile
+Checks through 2^16 seeds which is 65536 seeds and at the moment it is the maximum seed value
+It will log the best seed for grass, sand and water
+*/
 function searchForBestSeed(maxSeed = 66536) {
     let bestSeedGrass = 0;
     let bestSeedSand = 0;
@@ -1123,18 +1130,18 @@ function countTiles(seed){
         return ;
 }
 
-    /*Notes
+/*Notes
     Breaks because of canvas size (numbers like 1007 doesnt work but 1000 does)
     Breaks because of camera position
     Only the canvas size of 1000 width works
-    */
+
+    Got it to a workable point where the pointer tile thing works nicely
+*/
 function resizeCanvas(w,h){
     alert("Warning this feature is experimental and may break the game")
-    // if (window.innerHeight > maxCanvasHeight) h = maxCanvasHeight; else h = window.innerHeight;
+    if (window.innerHeight > maxCanvasHeight) h = maxCanvasHeight; else h = window.innerHeight;
     if (window.innerWidth > maxCanvasWidth) w = maxCanvasWidth; else w = window.innerWidth;
 
-    w= 1007
-    h = 1000
     CanvasHeight = h
     CanvasWidth = w
 
