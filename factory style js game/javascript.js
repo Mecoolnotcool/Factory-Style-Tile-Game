@@ -458,7 +458,9 @@ function Init(){
 
 let camera = {
   x: 0,
-  y: 0  ,
+  y: 0,
+  ox:0,
+  oy:0,
   width: canvas.width,
   height: canvas.height,
 };
@@ -623,6 +625,14 @@ function checkIfTransfer(Amount, Destination, Inputer, AltInventory, specific){
    
 }
 
+function moveCamera(x,y){
+    camera.ox += x
+    camera.oy += y
+
+    camera.x = camera.ox*zoom
+    camera.y = camera.oy*zoom
+}
+
 let maxBorderV = 1500 * zoom
 let maxBorderH = 1500 * zoom
 function fixCameraPos(z = zoom) {
@@ -646,23 +656,25 @@ document.addEventListener('keydown', function(event) {
                 }
         }
         if(event.key === 'w' && camera.y> 0) {
-            camera.y -= MovementSpeed
+            moveCamera(0,-MovementSpeed)
         } else if(event.key === 's' && camera.y < maxBorderH )  {
-            camera.y += MovementSpeed
+             moveCamera(0,MovementSpeed)
         }   
         if(event.key === 'd' && camera.x < maxBorderV) {
-            camera.x += MovementSpeed
+             moveCamera(MovementSpeed,0)
         } else if(event.key === 'a' && camera.x > 0) {
-            camera.x -= MovementSpeed
+            moveCamera(-MovementSpeed,0)
          }
 
          if(event.key === 'o' && zoom > 0.5){
             zoom-=0.1
             Tile_Size = originalTileSize*zoom;
+            moveCamera(0,0)
             fixCameraPos(zoom)
          } else if(event.key === 'p' && zoom < 1 && zoom != 0.4) {
             zoom +=0.1
             Tile_Size = originalTileSize*zoom;
+            moveCamera(0,0)
             fixCameraPos(zoom)
          }
 });
@@ -1131,11 +1143,7 @@ function countTiles(seed){
 }
 
 /*Notes
-    Breaks because of canvas size (numbers like 1007 doesnt work but 1000 does)
-    Breaks because of camera position
-    Only the canvas size of 1000 width works
-
-    Got it to a workable point where the pointer tile thing works nicely
+    Might Be fixed
 */
 function resizeCanvas(w,h){
     alert("Warning this feature is experimental and may break the game")
