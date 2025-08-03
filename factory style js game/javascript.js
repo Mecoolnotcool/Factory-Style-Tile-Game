@@ -1,4 +1,4 @@
-const GameVersion = 'Alpha 0.1'
+const GameVersion = 'Alpha 0.2'
 
 //canvas stuff
 let canvas = document.getElementById("Canvas");
@@ -184,45 +184,45 @@ const containers = {
     }
 }
 
-const opposites = {
-    'right':'left',
-    'left':'right',
-    'bottom':'top',
-    'top':'bottom'
+const opposites ={
+    1:3,
+    2:4,
+    4:2,
+    3:1,
 }
 
-
+//one day i will genarate these automatically
 const Straightdirections = {
   0 : {
-        input:'top',
-        output:'bottom',
+        input:1,
+        output:3,
     },
     90 : {
-        input:'left',
-        output:'right',
+        input:4,
+        output:2,
     },
     180 : {
-        input:'top',
-        output:'top',
+        input:3,
+        output:1,
     },
      270 : {
-        input:'right',
-        output:'left',
+        input:2,
+        output:4,
     },
     360  : {
-        input:'top',
-        output:'bottom',
+        input:1,
+        output:3,
     },
 };
 
 const Turndirections = {
-  0:   { input: 'top',    output: 'left' },
-  90:  { input: 'left',   output: 'bottom' },
-  180: { input: 'bottom', output: 'right' },
-  270: { input: 'right',  output: 'top' },
-  360:   { input: 'top',    output: 'left' },
+  0:   { input: 1,    output: 4 },
+  90:  { input: 4,   output: 3 },
+  180: { input: 3, output: 2 },
+  270: { input: 2,  output: 1 },
+  360:   { input: 1,    output: 4 },
 };
-
+//these^
 
 const types = {
     fluid:[
@@ -355,7 +355,7 @@ function preloadImages(names, onComplete) {
         };
 
         img.onerror = () => {
-            console.warn(`Failed to load image: ${name}`);
+            console.error(`Failed to load image: ${name}`);
             loaded++;
             if (loaded === total) {
                 onComplete(); // Proceed even if some fail
@@ -368,7 +368,7 @@ function preloadImages(names, onComplete) {
 
 function drawTile(x,y,type,degrees){
     if(typeof x !== 'number' || typeof y !== 'number' || typeof Tile_Size !== 'number') {
-        console.log('failed to draw a tile, number values not provided')
+        console.error('failed to draw a tile, number values not provided')
         return;
     } 
    
@@ -454,8 +454,6 @@ function Init(){
     shop();
 }
 
-
-
 let camera = {
   x: 0,
   y: 0,
@@ -513,10 +511,10 @@ function AdjacentTiles(x,y) {
     let TilesNearby = [];
 
     TilesNearby.push({
-        'left':{X:x-originalTileSize,Y:y},
-        'right':{X:x+originalTileSize,Y:y},
-        'bottom':{X:x,Y:y-originalTileSize},
-        'top':{X:x,Y:y+originalTileSize}
+        4:{X:x-originalTileSize,Y:y},
+        2:{X:x+originalTileSize,Y:y},
+        3:{X:x,Y:y-originalTileSize},
+        1:{X:x,Y:y+originalTileSize}
     });
 
     return TilesNearby;
@@ -646,6 +644,7 @@ function optimizeTileLoading() {
     return;
 }
 
+
 //Keyboard controls
 document.addEventListener('keydown', function(event) {
         if(event.key === 'r' || event.key === 'R') {
@@ -696,6 +695,22 @@ canvas.addEventListener('mousemove',function(event) {
     } 
 })
 
+//wanted to try out switches
+//was going to be used for a newer system but stuck with the old
+//for later use
+function re_assign_ios(n,addSub,i){
+    i=i/90
+    if (i==4) i = 0;
+    for (let times=0;times>i;times++){
+         switch (addSub) {
+        case 1:
+            return (n==4)?1: n++;
+        default:
+            return (n==0)?4: n -= 1;
+        }
+    }
+}
+
 //detects clicking on tile
 canvas.addEventListener('mousedown', function(event) {
     const rect = canvas.getBoundingClientRect() 
@@ -706,13 +721,9 @@ canvas.addEventListener('mousedown', function(event) {
     let CameraTileX = Math.floor(camera.x / Tile_Size)
     let CameraTileY = Math.floor(camera.y / Tile_Size)
 
-    console.log(CameraTileX/2,CameraTileX*zoom,CameraTileX,camera.x)
     
     let tileX = HoveredTileX + CameraTileX 
     let tileY = HoveredTileY + CameraTileY
-
-    // const tileX = Math.floor((mouseX / Tile_Size) + CameraTileX);
-    // const tileY = Math.floor((mouseY /Tile_Size) + CameraTileY);
 
     if (tileExists(tileX, tileY)) {
         if(ItemSelected != null){
