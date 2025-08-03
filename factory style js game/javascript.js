@@ -191,6 +191,40 @@ const opposites ={
     3:1,
 }
 
+let BaseMachineDirections = {
+    pipe: {
+        0: {
+            input:1,
+            output: 3,
+        }
+    },
+    smelter: {
+        0: {
+            input:1,
+            output: 3,
+        }
+    },
+    fluid_tank: {
+        0: {
+            input:1,
+            output: 3,
+        }
+    },
+    pipe_turn: {
+        0: {
+            input:1,
+            output: 2,
+        }
+    },
+    digger: {
+        0: {
+            output: 3,
+        }
+    },
+
+
+}
+
 //one day i will genarate these automatically
 const Straightdirections = {
   0 : {
@@ -449,9 +483,46 @@ function generateMap(inputedSeed) {
        
 }
 
+
+function re_assign_ios(IoNumer,ChangeAmount) {
+    let returnValue;
+    returnValue = IoNumer + ChangeAmount;
+   if (returnValue == 0) returnValue = 4;
+   if (returnValue > 4) returnValue = 1;
+
+   return returnValue;
+}   
+
+//oop
+//the code is starting to get shitty!!
+function autoGenerate() {
+        Object.keys(BaseMachineDirections).forEach(key => {
+            let machine = BaseMachineDirections[key];
+            let angle = 0;
+            for (let times=0; times <= 3; times++) {
+                angle = angle + 90;
+
+                if (machine[angle-90] !== undefined) {
+                    if (machine[angle-90].input) {
+                        machine[angle] = {
+                            input: re_assign_ios(machine[angle-90].input, 1),
+                            output: re_assign_ios(machine[angle-90].output, 1),
+                        };
+                    } else{
+                        machine[angle] = {
+                            output: re_assign_ios(machine[angle-90].output, 1),
+                        };
+                    }
+                }
+            }
+        });
+}
+
+
 function Init(){
     generateMap();
     shop();
+    autoGenerate();
 }
 
 let camera = {
