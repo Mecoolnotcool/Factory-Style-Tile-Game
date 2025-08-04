@@ -680,7 +680,6 @@ function optimizeTileLoading() {
     return;
 }
 
-
 //Keyboard controls
 document.addEventListener('keydown', function(event) {
         if(event.key === 'r' || event.key === 'R') {
@@ -732,16 +731,17 @@ canvas.addEventListener('mousemove',function(event) {
 })
 
 function CanBePlaced(tileX,tileY){
-    if (placementConditions[ItemSelected] != undefined && placementConditions[ItemSelected].blacklist){
-        for(let n = 0; n < placementConditions[ItemSelected].blacklist.length; n++) {
-            if(getTile(tileX,tileY).type ==  placementConditions[ItemSelected].blacklist[n] ){
-                console.warn('cant place');
-                return false;
-            } else {
-                return true;
-            }
-        }
-    } 
+    return true;
+    // if (placementConditions[ItemSelected] != undefined && placementConditions[ItemSelected].blacklist){
+    //     for(let n = 0; n < placementConditions[ItemSelected].blacklist.length; n++) {
+    //         if(getTile(tileX,tileY).type ==  placementConditions[ItemSelected].blacklist[n] ){
+    //             console.warn('cant place');
+    //             return false;
+    //         } else {
+    //             return true;
+    //         }
+    //     }
+    // } 
 }
 //yikes took too long to add this 
 function placeTile(tileX, tileY){
@@ -749,7 +749,16 @@ function placeTile(tileX, tileY){
     if (tileExists(tileX, tileY)) {
         let tile = getTile(tileX,tileY);
         if(CanBePlaced(tileX,tileY)){  
-            console.log(tile )
+            if (machines[ItemSelected]); else return;
+                tile.machine = ItemSelected;
+                tile.degrees = angle;
+                tile.input = BaseMachineDirections[tile.machine][angle];
+                tile.output = BaseMachineDirections[tile.machine][angle];
+
+                ItemSelected = null;
+                angle = 0;
+                
+                console.log(tile);
         }
     }
 }
@@ -783,45 +792,33 @@ function tick(currentTime) {
         for (let x = 0; x < Tiles[y].length; x++) {
              
             let Tile = getTile(x,y) 
-            if(MachineInstructions[Tile.machine] != undefined){
-                if(MachineInstructions[Tile.machine].RecipeMachine == false){
-                    Tile.timer = (Tile.timer || 0) + deltatime;
-                    if(Tile.timer>= MachineInstructions[Tile.machine].When){
-                    Tile.timer = 0
-                     if(Tile.inventory.item == null){
-                    Tile.inventory.item = MachineInstructions[Tile.machine].Farm
-                 } else if(Tile.inventory.amount < MachineInstructions[Tile.machine].MaxInventory ){
-                      Tile.inventory.amount+= MachineInstructions[Tile.machine].Amount
-                 }
-               }
-                } else{
-                    process(Tile)
-                     Tile.inventory2.active = true
-                }
-            }
+
+            if(Tile.machine) ; else break;
+           
+            
 
             if(Tile.machine == containers.sell_machine.Name) {
                 sellMachine(Tile)
             }
 
             //transfer stuff
-            if(Tile.output != null) {
-                let opposite = opposites[Tile.output]
-                const NearbyTiles = AdjacentTiles(Tile.x,Tile.y)
-                let dy= Math.floor(NearbyTiles[0][opposite].Y/originalTileSize) //Convert to tile coords
-                let dx = Math.floor(NearbyTiles[0][opposite].X/originalTileSize)
-                if(NearbyTiles[0][opposite] && tileExists(dx,dy)){
-                    transferInventorys(Math.floor(Tile.x/originalTileSize),Math.floor(Tile.y/originalTileSize),dx,dy,1)
-                } else{
-                    // forbidden error i  do know what can cause it and its if its looking for a pixel out of range meaning not on the screen
-                    if(errorCode1 == false) {
-                        console.warn('forbiden error')
-                        errorCode1 = true
-                        return
-                    }
-                }
+            // if(Tile.output != null) {
+            //     let opposite = opposites[Tile.output]
+            //     const NearbyTiles = AdjacentTiles(Tile.x,Tile.y)
+            //     let dy= Math.floor(NearbyTiles[0][opposite].Y/originalTileSize) //Convert to tile coords
+            //     let dx = Math.floor(NearbyTiles[0][opposite].X/originalTileSize)
+            //     if(NearbyTiles[0][opposite] && tileExists(dx,dy)){
+            //         transferInventorys(Math.floor(Tile.x/originalTileSize),Math.floor(Tile.y/originalTileSize),dx,dy,1)
+            //     } else{
+            //         // forbidden error i  do know what can cause it and its if its looking for a pixel out of range meaning not on the screen
+            //         if(errorCode1 == false) {
+            //             console.warn('forbiden error')
+            //             errorCode1 = true
+            //             return
+            //         }
+            //     }
 
-            }
+            // }
         }
     }  
 
