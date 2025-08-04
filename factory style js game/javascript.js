@@ -104,92 +104,90 @@ const ShopItems = [
  
 ];
 
-const MachineInstructions = {
-    test_machine : {
-        'Name': 'test_machine',
-        'RecipeMachine':false, 
-        'Farm': 'water',
-        'Amount':1,
-        'When': 1, //after how many sec
-        'HasInput':false,
-        'MaxInventory': 10
-
-    },
-    digger : {
-        'Name': 'digger',
-        'RecipeMachine':false, 
-        'Farm': 'sand',
-        'Amount':1,
-        'When': 1, //after how many sec
-        'HasInput':false,
-        'MaxInventory': 10
-
-    },  
-    smelter : {
-        'Name': 'smelter',
-        'RecipeMachine':true, 
-        'Farm': null,
-        'Amount': 0,
-        'When': 0, //after how many sec
-        'HasInput':true,
-        'MaxInventory': 10
-    },
-     glass_molder : {
-        'Name': 'glass_molder',
-        'RecipeMachine':true, 
-        'Farm': null,
-        'Amount': 0,
-        'When': 0, //after how many sec
-        'HasInput':true,
-        'MaxInventory': 10
-    },
-}
-
-const containers = {
+const machines = {
     pipe :{
         'Name':'pipe',
         'MaxInventory':10,
         'TypeInputed': null,
-        'Turn':false
+        'MachineInstructions':null
     },
     pipe_turn :{
         'Name':'pipe',
         'MaxInventory':10,
         'TypeInputed': null,
-        'Turn':true
+        'MachineInstructions':null
     },
     fluid_tank: {
         'Name':'pipe',
         'MaxInventory':100,
         'TypeInputed': 'fluid',
-        'Turn':false
+        'MachineInstructions':null
     },
     smelter :{
         'Name':'smelter',
         'MaxInventory':10,
         'TypeInputed': 'smelter',
-        'Turn':false
+        'MachineInstructions':{
+            'RecipeMachine':true, 
+            'Farm': null,
+            'Amount': 0,
+            'When': 0, 
+            'HasInput':true,
+            'MaxInventory': 10
+        }
     },
     glass_molder :{
         'Name':'smelter',
         'MaxInventory':10,
         'TypeInputed': 'glass_molder',
-        'Turn':false
+        'MachineInstructions':{
+            'RecipeMachine':true, 
+            'Farm': null,
+            'Amount': 0,
+            'When': 0, 
+            'HasInput':true,
+            'MaxInventory': 10
+        }
     },
     sell_machine : {
        'Name':'sell_machine',
         'MaxInventory':5,
         'TypeInputed': null,
-        'Turn':false 
+    },
+    digger : {
+        'Name': 'digger',
+        'MaxInventory': 10,
+        'TypeInput': NaN,
+        'MachineInstructions':{
+            'RecipeMachine':false, 
+            'Farm': 'sand',
+            'Amount':1,
+            'When': 1,
+            'HasInput':false,
+            'MaxInventory': 10
+        }
+    }, 
+    test_machine : {
+        'Name': 'test_machine',
+        'MaxInventory': 10,
+        'TypeInput': NaN,
+        'MachineInstructions':{
+            'RecipeMachine':false, 
+            'Farm': 'water',
+            'Amount':1,
+            'When': 1, 
+            'HasInput':false,
+            'MaxInventory': 10
+        }
     }
-}
+};
 
-const opposites ={
+const opposites = {
     1:3,
     2:4,
     4:2,
     3:1,
-}
+};
 
 let BaseMachineDirections = {
     pipe: {
@@ -221,42 +219,22 @@ let BaseMachineDirections = {
             output: 3,
         }
     },
-
-
-}
-
-//one day i will genarate these automatically
-const Straightdirections = {
-  0 : {
-        input:1,
-        output:3,
+    pipe_split: {
+        0: {
+            input:1,
+            output: 4,
+            output2: 3,
+        }
     },
-    90 : {
-        input:4,
-        output:2,
+    pipe_combiner: {
+        0: {
+            input:4,
+            input2:2,
+            output: 3,
+        }
     },
-    180 : {
-        input:3,
-        output:1,
-    },
-     270 : {
-        input:2,
-        output:4,
-    },
-    360  : {
-        input:1,
-        output:3,
-    },
+    
 };
-
-const Turndirections = {
-  0:   { input: 1,    output: 4 },
-  90:  { input: 4,   output: 3 },
-  180: { input: 3, output: 2 },
-  270: { input: 2,  output: 1 },
-  360:   { input: 1,    output: 4 },
-};
-//these^
 
 const types = {
     fluid:[
@@ -275,7 +253,7 @@ const types = {
     glass_molder: [
         'molten_glass'
     ]
-}
+};
 
 const sellValues = {
     water: 1,
@@ -285,7 +263,8 @@ const sellValues = {
 };
 
 const recipes = {
-    sand_to_glass :{
+    processing:{
+        sand_to_glass :{
         machineFor: 'smelter',
         inputRecipe: {
            item: 'sand',
@@ -307,35 +286,11 @@ const recipes = {
            amount: 1
         }
     }
-}
+    },
+    crafting:{
 
-
-const placementConditions  = {
-    test_machine:{
-        'blacklist': ['water']
     },
-    pipe:{
-        'blacklist': ['water']
-    },
-    pipe_turn:{
-        'blacklist': ['water']
-    },
-    fluid_tank:{
-        'blacklist': ['water']
-    },
-     digger:{
-        'blacklist': ['water','grass','dirt','pipe','fluid_tank','pipe_turn']
-    },
-    smelter:{
-        'blacklist': ['water']
-    },
-    glass_molder:{
-        'blacklist': ['water']
-    },
-    sell_machine:{
-        'blacklist': ['water']
-    },
-}
+};
 
 const tools = ['shovel', 'test', 'bucket'];
 
@@ -373,7 +328,7 @@ for (const name of TilesWithImages) {
 }
 
 //functions
-function preloadImages(names, onComplete) {
+function preloadImages(names,onComplete) {
     let loaded = 0;
     const total = names.length;
 
@@ -483,7 +438,6 @@ function generateMap(inputedSeed) {
        
 }
 
-
 function re_assign_ios(IoNumer,ChangeAmount) {
     let returnValue;
     returnValue = IoNumer + ChangeAmount;
@@ -501,7 +455,6 @@ function autoGenerate() {
             let angle = 0;
             for (let times=0; times <= 3; times++) {
                 angle = angle + 90;
-
                 if (machine[angle-90] !== undefined) {
                     if (machine[angle-90].input) {
                         machine[angle] = {
@@ -514,10 +467,22 @@ function autoGenerate() {
                         };
                     }
                 }
+                if(machine[angle-90].output2){
+                    machine[angle] = {
+                            input: re_assign_ios(machine[angle-90].input, 1),
+                            output: re_assign_ios(machine[angle-90].output, 1),
+                            output2: re_assign_ios(machine[angle-90].output2, 1),
+                    };
+                } else if(machine[angle-90].input2){
+                    machine[angle] = {
+                            input: re_assign_ios(machine[angle-90].input, 1),
+                            input2: re_assign_ios(machine[angle-90].input2, 1),
+                            output: re_assign_ios(machine[angle-90].output, 1),
+                    };
+                }
             }
         });
 }
-
 
 function Init(){
     generateMap();
@@ -615,8 +580,8 @@ function craft(){
 
 function process(Currentmachine,inv) {
     if (Currentmachine.inventory2.active == false) return;
-    for (let key in recipes) {
-        const recipe = recipes[key];
+    for (let key in recipes.processing) {
+       const recipe = recipes.processing[key];
         if (recipe.machineFor == Currentmachine.machine) {
             if(Currentmachine.inventory.item == recipe.inputRecipe.item){
                 if(Currentmachine.inventory.amount >= 1 && Currentmachine.inventory2.amount < containers[Currentmachine.machine].MaxInventory) {
@@ -749,7 +714,7 @@ document.addEventListener('keydown', function(event) {
          }
 });
 
-// for placement of tiles (in the future)
+
 let HoveredTileX = null
 let HoveredTileY = null
 canvas.addEventListener('mousemove',function(event) {
@@ -766,18 +731,25 @@ canvas.addEventListener('mousemove',function(event) {
     } 
 })
 
-//wanted to try out switches
-//was going to be used for a newer system but stuck with the old
-//for later use
-function re_assign_ios(n,addSub,i){
-    i=i/90
-    if (i==4) i = 0;
-    for (let times=0;times>i;times++){
-         switch (addSub) {
-        case 1:
-            return (n==4)?1: n++;
-        default:
-            return (n==0)?4: n -= 1;
+function CanBePlaced(tileX,tileY){
+    if (placementConditions[ItemSelected] != undefined && placementConditions[ItemSelected].blacklist){
+        for(let n = 0; n < placementConditions[ItemSelected].blacklist.length; n++) {
+            if(getTile(tileX,tileY).type ==  placementConditions[ItemSelected].blacklist[n] ){
+                console.warn('cant place');
+                return false;
+            } else {
+                return true;
+            }
+        }
+    } 
+}
+//yikes took too long to add this 
+function placeTile(tileX, tileY){
+    if (ItemSelected == null) return;
+    if (tileExists(tileX, tileY)) {
+        let tile = getTile(tileX,tileY);
+        if(CanBePlaced(tileX,tileY)){  
+            console.log(tile )
         }
     }
 }
@@ -796,53 +768,8 @@ canvas.addEventListener('mousedown', function(event) {
     let tileX = HoveredTileX + CameraTileX 
     let tileY = HoveredTileY + CameraTileY
 
-    if (tileExists(tileX, tileY)) {
-        if(ItemSelected != null){
-            if(tools.includes(ItemSelected) ) {
-                if(ItemSelected == 'test'){
-                    console.log(getTile(tileX,tileY))
-                }else if(ItemSelected == 'bucket'){
-                    if(getTile(tileX,tileY).type == 'water'){
-                        getTile(tileX,tileY).type = 'sand'
-                    }
-                } else if(ItemSelected == 'shovel'){
-                    if(getTile(tileX,tileY).type == 'grass'){
-                        getTile(tileX,tileY).type = 'dirt'
-                }}
-            } else if(getTile(tileX,tileY)) {
-                if (placementConditions[ItemSelected] != undefined && placementConditions[ItemSelected] .blacklist){
-                for(let n = 0; n < placementConditions[ItemSelected].blacklist.length; n++) {
-                    if(getTile(tileX,tileY).type ==  placementConditions[ItemSelected].blacklist[n] ){
-                        console.warn('cant place')
-                        return
-                    }
-                }}
-                if(containers[ItemSelected] && containers[ItemSelected].Turn == false ){
-                    getTile(tileX,tileY).output = Straightdirections[angle].output
-                    getTile(tileX,tileY).input = Straightdirections[angle].input
-                } else {
-                    if(containers[ItemSelected] && containers[ItemSelected].Turn == true){
-                        getTile(tileX,tileY).output = Turndirections[angle].output
-                        getTile(tileX,tileY).input = Turndirections[angle].input
-                    } else {
-                        if(MachineInstructions[ItemSelected]) {
-                        if(MachineInstructions[ItemSelected].HasInput == false){
-                           getTile(tileX,tileY).output = Straightdirections[angle].output
-                        } else{
-                             getTile(tileX,tileY).output = Straightdirections[angle].output
-                            getTile(tileX,tileY).input = Straightdirections[angle].input
-                        }
-                    }
-                    }
-                }
-                getTile(tileX,tileY).machine = ItemSelected
-                getTile(tileX,tileY).degrees = angle
-                ItemSelected = null
-                angle = 0
-            } 
-        }
-        
-    } 
+    
+    placeTile(tileX,tileY);
 });
 
 let LastTime = performance.now();
